@@ -1,0 +1,2450 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#1A1611">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  /* ─── Palette ─────────────────────────────────────────────────────── */
+  :root {
+    --bg:          #1A1611;   /* base — warm charcoal */
+    --bg-raised:  #221C15;   /* prompt blocks, tab-intro */
+    --bg-raised-2: #2B241B;
+    --text:        #E8DFCB;   /* body */
+    --text-strong: #F4ECD7;   /* h1, h2, h3, strong */
+    --text-muted:  #968A75;   /* subtitles, eyebrows */
+    --text-faded:  #6F6555;
+    --border:      #3A322A;   /* visible separators */
+    --border-soft: #29231C;   /* subtle, near-bg */
+    --accent:      #D6541A;   /* terracotta — brightened for dark */
+    --accent-hot:  #E8703A;   /* hover state */
+    --success:     #5A9379;   /* "Copied" feedback */
+  }
+
+  html { scroll-behavior: smooth; background: var(--bg); }
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: 'Newsreader', Georgia, serif;
+    font-optical-sizing: auto;
+    font-size: 17px;
+    line-height: 1.65;
+    color: var(--text);
+    background: var(--bg);
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 48px 28px 120px;
+  }
+
+  /* ─── Header ──────────────────────────────────────────────────────── */
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+  }
+
+  h1 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 500;
+    font-size: 50px;
+    line-height: 1.04;
+    letter-spacing: -0.02em;
+    margin: 0 0 22px;
+    color: var(--text-strong);
+    font-variation-settings: 'SOFT' 50, 'WONK' 0;
+  }
+
+  h1 em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--accent);
+  }
+
+  .intro {
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--text);
+    margin: 0 0 14px;
+    max-width: 620px;
+  }
+
+  /* Header collapsible "Setup & workflow" — sits below the lead intro */
+  details.lead {
+    margin: 6px 0 0;
+    max-width: 620px;
+  }
+
+  details.lead > summary {
+    list-style: none;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 6px 0;
+    user-select: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  details.lead > summary::-webkit-details-marker { display: none; }
+  details.lead > summary::marker { content: ''; }
+  details.lead > summary::before {
+    content: '+';
+    display: inline-block;
+    width: 14px; height: 14px; line-height: 13px;
+    text-align: center;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    font-size: 12px;
+    color: var(--text-muted);
+    transition: all 0.15s;
+  }
+  details.lead[open] > summary::before {
+    content: '−';
+    background: var(--text-muted);
+    color: var(--bg);
+    border-color: var(--text-muted);
+  }
+  details.lead > summary:hover { color: var(--accent); }
+  details.lead > summary:hover::before { border-color: var(--accent); color: var(--accent); }
+  details.lead .lead-body {
+    margin-top: 10px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  /* ─── Sticky jump nav ─────────────────────────────────────────────── */
+  /* Page-level jump nav (sticky at top of viewport).
+     Editorial style matching the in-tab prompt-jump: numbered + italic labels
+     with hairlines between. Slim, restrained, no pill buttons. */
+  nav.jump {
+    position: sticky;
+    top: 0;
+    background: rgba(26, 22, 17, 0.88);
+    -webkit-backdrop-filter: saturate(180%) blur(14px);
+    backdrop-filter: saturate(180%) blur(14px);
+    padding: 12px 28px;
+    margin: 32px -28px 36px;
+    border-top: 1px solid var(--border-soft);
+    border-bottom: 1px solid var(--border-soft);
+    display: flex;
+    align-items: baseline;
+    gap: 0;
+    flex-wrap: wrap;
+    z-index: 10;
+  }
+
+  nav.jump a {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 4px 18px 4px 0;
+    margin-right: 18px;
+    text-decoration: none;
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 14px;
+    line-height: 1.3;
+    color: var(--text-strong);
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    white-space: nowrap;
+    transition: color 0.15s ease;
+    position: relative;
+  }
+
+  nav.jump a:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 18%;
+    bottom: 18%;
+    width: 1px;
+    background: var(--border);
+    pointer-events: none;
+  }
+
+  nav.jump a .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    transition: color 0.15s;
+  }
+
+  nav.jump a .label {
+    font-family: 'Newsreader', Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    color: var(--text);
+    transition: color 0.15s;
+  }
+
+  nav.jump a:hover .num,
+  nav.jump a:hover .label {
+    color: var(--accent-hot);
+  }
+
+  nav.jump a:active { transform: translateY(1px); }
+
+  /* ─── Headings ─────────────────────────────────────────────────────── */
+  h2 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 500;
+    font-size: 32px;
+    line-height: 1.15;
+    margin: 80px 0 12px;
+    letter-spacing: -0.015em;
+    color: var(--text-strong);
+    scroll-margin-top: 80px;
+    font-variation-settings: 'SOFT' 50;
+  }
+
+  /* When an h2 sits directly after the sticky page nav, the nav's own
+     bottom margin already provides separation — so the h2's normal 80px
+     top margin would create a yawning gap. Tighten it. */
+  nav.jump + h2 { margin-top: 32px; }
+
+  h3 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 500;
+    font-size: 21px;
+    line-height: 1.3;
+    margin: 40px 0 8px;
+    letter-spacing: -0.01em;
+    color: var(--text-strong);
+    scroll-margin-top: 80px;
+  }
+
+  .section-subtitle {
+    color: var(--text-muted);
+    margin: 0 0 22px;
+    font-size: 15.5px;
+    line-height: 1.55;
+    max-width: 620px;
+  }
+
+  /* ─── Prompt blocks ───────────────────────────────────────────────── */
+  .prompt-block {
+    position: relative;
+    background: var(--bg-raised);
+    border: 1px solid var(--border-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: 3px;
+    padding: 44px 18px 18px 20px;
+    margin: 14px 0 24px;
+    transition: max-height 0.3s ease;
+  }
+
+  .prompt-block.collapsed {
+    max-height: 200px;
+    overflow: hidden;
+    padding-bottom: 52px;
+  }
+
+  .prompt-block.collapsed::after {
+    content: '';
+    position: absolute;
+    bottom: 40px;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: linear-gradient(to bottom, rgba(34, 28, 21, 0), var(--bg-raised) 75%);
+    pointer-events: none;
+  }
+
+  .prompt-block pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    color: var(--text);
+    margin: 0;
+    overflow-x: auto;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--text-strong);
+    color: var(--bg);
+    border: none;
+    padding: 7px 13px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: background 0.15s, transform 0.1s;
+    z-index: 2;
+    min-height: 32px;
+  }
+
+  .copy-btn:hover { background: var(--accent-hot); color: var(--bg); }
+  .copy-btn:active { transform: scale(0.97); }
+  .copy-btn.copied { background: var(--success); color: var(--bg); }
+
+  .expand-btn {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--text-strong);
+    border: 1px solid var(--text-strong);
+    color: var(--bg);
+    padding: 7px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    z-index: 3;
+    white-space: nowrap;
+    min-height: 32px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  }
+
+  .expand-btn:hover {
+    background: var(--accent-hot);
+    border-color: var(--accent-hot);
+    color: var(--bg);
+  }
+
+  .expand-btn:active {
+    transform: translateX(-50%) scale(0.97);
+  }
+
+  /* ─── Workflow accent colours (per-tab identity) ─────────────────── */
+  /* Single = terracotta (default accent). Retrofit = bronze. Bundle = teal. */
+  :root {
+    --wf-single:      #D6541A;
+    --wf-single-hot:  #E8703A;
+    --wf-retrofit:    #B88B4A;
+    --wf-retrofit-hot:#D1A35E;
+    --wf-bundle:      #5A9595;
+    --wf-bundle-hot:  #76B5B5;
+  }
+
+  /* ─── Tab nav (pills with workflow-coloured active states) ────────── */
+  .tab-nav {
+    display: flex;
+    gap: 6px;
+    margin: 8px 0 0;
+    flex-wrap: wrap;
+  }
+
+  /* Sticky variant: when scrolled into the workflow section, the tab nav
+     re-pins below the page jump nav. Toggled via JS adding .is-sticky. */
+  .tab-nav.is-sticky {
+    position: sticky;
+    top: 52px;  /* below the page-level jump nav */
+    z-index: 9;
+    background: rgba(26, 22, 17, 0.92);
+    -webkit-backdrop-filter: saturate(180%) blur(14px);
+    backdrop-filter: saturate(180%) blur(14px);
+    margin: 0 -28px;
+    padding: 10px 28px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  /* When the workflow tabs are sticky, hide the page-level jump nav on mobile
+     (saves vertical room — they're redundant: you're inside Workflow already).
+     Body class is toggled by the same scroll observer. */
+  body.workflow-sticky nav.jump { /* desktop: keep visible */ }
+  @media (max-width: 560px) {
+    body.workflow-sticky nav.jump {
+      transform: translateY(-100%);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+    .tab-nav.is-sticky {
+      top: 0;  /* full top, since page jump nav is hidden */
+      gap: 4px;
+      padding: 8px 14px;
+      margin: 0 -14px;
+    }
+    .tab-nav.is-sticky .tab-btn {
+      padding: 6px 10px;
+      font-size: 9.5px;
+      letter-spacing: 0.08em;
+    }
+  }
+
+  .tab-btn {
+    background: transparent;
+    border: 1px solid var(--border-soft);
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    min-height: 32px;
+  }
+
+  .tab-btn:hover {
+    color: var(--text-strong);
+    border-color: var(--border);
+  }
+
+  /* Active tab takes its workflow colour */
+  .tab-btn[data-tab="single"].active {
+    color: var(--bg); background: var(--wf-single); border-color: var(--wf-single);
+  }
+  .tab-btn[data-tab="retrofit"].active {
+    color: var(--bg); background: var(--wf-retrofit); border-color: var(--wf-retrofit);
+  }
+  .tab-btn[data-tab="bundle"].active {
+    color: var(--bg); background: var(--wf-bundle); border-color: var(--wf-bundle);
+  }
+
+  .tab-panel { display: none; padding-top: 22px; }
+  .tab-panel.active { display: block; }
+
+  /* ─── Per-workflow prompt-block styling ──────────────────────────── */
+  /* Each prompt block inside a tab panel gets a coloured left border,
+     a workflow tag in the top-right corner, and a tinted Copy button —
+     so you always know which workflow you're copying from. */
+
+  .tab-panel[data-panel="single"] .prompt-block {
+    border-left-color: var(--wf-single);
+  }
+  .tab-panel[data-panel="retrofit"] .prompt-block {
+    border-left-color: var(--wf-retrofit);
+  }
+  .tab-panel[data-panel="bundle"] .prompt-block {
+    border-left-color: var(--wf-bundle);
+  }
+
+  /* Workflow tag — generated via ::before on each prompt block inside a tab.
+     Sits to the left of the Copy button so the two read as a paired unit
+     ("this is the workflow, this is the action"). Avoids the awkward
+     left-corner / right-corner orphan-pair feel. */
+  .tab-panel[data-panel] .prompt-block::before {
+    position: absolute;
+    top: 14px;
+    right: 90px;  /* leaves clearance for the Copy button (~75px wide + gap) */
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 4px 9px;
+    border-radius: 2px;
+    z-index: 2;
+    pointer-events: none;
+    line-height: 1;
+  }
+  .tab-panel[data-panel="single"] .prompt-block::before {
+    content: 'Single';
+    color: var(--wf-single);
+    background: rgba(214, 84, 26, 0.12);
+    border: 1px solid rgba(214, 84, 26, 0.3);
+  }
+  .tab-panel[data-panel="retrofit"] .prompt-block::before {
+    content: 'Retrofit';
+    color: var(--wf-retrofit);
+    background: rgba(184, 139, 74, 0.12);
+    border: 1px solid rgba(184, 139, 74, 0.3);
+  }
+  .tab-panel[data-panel="bundle"] .prompt-block::before {
+    content: 'Bundle';
+    color: var(--wf-bundle);
+    background: rgba(90, 149, 149, 0.14);
+    border: 1px solid rgba(90, 149, 149, 0.32);
+  }
+
+  /* Tab intro borders also follow the workflow colour */
+  .tab-panel[data-panel="single"] .tab-intro {
+    border-left-color: var(--wf-single);
+  }
+  .tab-panel[data-panel="retrofit"] .tab-intro {
+    border-left-color: var(--wf-retrofit);
+  }
+  .tab-panel[data-panel="bundle"] .tab-intro {
+    border-left-color: var(--wf-bundle);
+  }
+
+  .tab-intro {
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 15.5px;
+    color: var(--text);
+    margin: 0 0 22px;
+    padding: 13px 16px;
+    background: var(--bg-raised);
+    border-left: 3px solid var(--accent);
+    border-radius: 2px;
+    line-height: 1.5;
+  }
+
+  .tab-intro strong { color: var(--text-strong); }
+
+  /* ─── Explainer collapsibles ─────────────────────────────────────── */
+  details.explainer {
+    margin: 12px 0 28px;
+    border-left: 2px solid var(--border-soft);
+    padding: 0 0 0 14px;
+    background: transparent;
+  }
+
+  details.explainer > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 6px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: color 0.15s;
+    user-select: none;
+  }
+
+  details.explainer > summary::-webkit-details-marker { display: none; }
+  details.explainer > summary::marker { content: ''; }
+
+  details.explainer > summary::before {
+    content: '+';
+    display: inline-block;
+    width: 14px; height: 14px; line-height: 13px;
+    text-align: center;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 400;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  details.explainer[open] > summary::before {
+    content: '−';
+    background: var(--text-muted);
+    color: var(--bg);
+    border-color: var(--text-muted);
+  }
+
+  details.explainer > summary:hover { color: var(--accent); }
+  details.explainer > summary:hover::before { border-color: var(--accent); color: var(--accent); }
+  details.explainer[open] > summary:hover::before {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--text-strong);
+  }
+
+  details.explainer .explainer-body {
+    padding: 10px 0 4px 2px;
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--text);
+  }
+
+  details.explainer .explainer-body h3 {
+    margin: 16px 0 6px;
+    font-size: 19px;
+  }
+
+  details.explainer .explainer-body h3:first-child { margin-top: 0; }
+
+  details.explainer .explainer-body .note {
+    margin: 0 0 12px;
+    padding-bottom: 8px;
+    border-bottom: none;
+  }
+  details.explainer .explainer-body .note:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  details.explainer .explainer-body .note-title {
+    font-size: 16px;
+    margin-bottom: 2px;
+    color: var(--text-strong);
+  }
+  details.explainer .explainer-body p { margin: 6px 0; }
+
+  /* ─── Jump-nav within a tab (newspaper-index style) ──────────────── */
+  /* A single horizontal line: 01 Audit | 02 Teach | 03 Build | ...
+     No container border, no "JUMP TO" prefix. Numbers in the workflow
+     colour, labels in body text. Vertical hairlines separate items;
+     a slim underline anchors the whole row.                              */
+  .prompt-jump {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0;
+    margin: 16px 0 28px;
+    padding: 0 0 12px;
+    border: none;
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .prompt-jump .prompt-jump-label { display: none; }  /* legacy "Jump to:" hidden */
+
+  .prompt-jump a {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 4px 18px 4px 0;
+    margin-right: 18px;
+    text-decoration: none;
+    color: var(--text-strong);
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 14px;
+    line-height: 1.3;
+    letter-spacing: 0;
+    text-transform: none;
+    border-radius: 0;
+    background: transparent;
+    transition: color 0.15s;
+    position: relative;
+  }
+
+  .prompt-jump a:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 18%;
+    bottom: 18%;
+    width: 1px;
+    background: var(--border);
+    pointer-events: none;
+  }
+
+  .prompt-jump a .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--accent);  /* default; overridden per workflow below */
+    transition: color 0.15s;
+  }
+
+  .prompt-jump a .label {
+    font-family: 'Newsreader', Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    color: var(--text);
+    transition: color 0.15s;
+  }
+
+  .prompt-jump a:hover .num,
+  .prompt-jump a:hover .label {
+    color: var(--accent-hot);
+  }
+
+  /* Workflow-coloured numbers (numbers only — labels stay neutral) */
+  .tab-panel[data-panel="single"] .prompt-jump a .num   { color: var(--wf-single); }
+  .tab-panel[data-panel="retrofit"] .prompt-jump a .num { color: var(--wf-retrofit); }
+  .tab-panel[data-panel="bundle"] .prompt-jump a .num   { color: var(--wf-bundle); }
+  .tab-panel[data-panel="single"] .prompt-jump a:hover .num,
+  .tab-panel[data-panel="single"] .prompt-jump a:hover .label   { color: var(--wf-single-hot); }
+  .tab-panel[data-panel="retrofit"] .prompt-jump a:hover .num,
+  .tab-panel[data-panel="retrofit"] .prompt-jump a:hover .label { color: var(--wf-retrofit-hot); }
+  .tab-panel[data-panel="bundle"] .prompt-jump a:hover .num,
+  .tab-panel[data-panel="bundle"] .prompt-jump a:hover .label   { color: var(--wf-bundle-hot); }
+
+  /* ─── Body text basics ────────────────────────────────────────────── */
+  p { margin: 14px 0; }
+  strong { font-weight: 600; color: var(--text-strong); }
+  em { font-style: italic; }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88em;
+    background: var(--bg-raised);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--text);
+  }
+
+  a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-color: rgba(214, 84, 26, 0.3);
+    text-underline-offset: 2px;
+  }
+  a:hover { color: var(--accent-hot); text-decoration-color: var(--accent-hot); }
+
+  /* ─── Field notes (each note is a collapsible) ───────────────────── */
+  details.fieldnote {
+    margin: 0;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  details.fieldnote:last-child { border-bottom: none; }
+  details.fieldnote > summary {
+    list-style: none;
+    cursor: pointer;
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 500;
+    font-size: 19px;
+    color: var(--text-strong);
+    line-height: 1.3;
+    letter-spacing: -0.005em;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    user-select: none;
+    padding: 0;
+  }
+  details.fieldnote > summary::-webkit-details-marker { display: none; }
+  details.fieldnote > summary::marker { content: ''; }
+  details.fieldnote > summary::after {
+    content: '+';
+    margin-left: auto;
+    color: var(--text-faded);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 400;
+    transition: color 0.15s, transform 0.2s;
+  }
+  details.fieldnote[open] > summary::after {
+    content: '−';
+    color: var(--accent);
+  }
+  details.fieldnote > summary:hover { color: var(--accent); }
+  details.fieldnote .fieldnote-body {
+    margin-top: 10px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text);
+  }
+  details.fieldnote .fieldnote-body p { margin: 6px 0; }
+  details.fieldnote .fieldnote-body p:first-child { margin-top: 0; }
+  details.fieldnote .fieldnote-body p:last-child { margin-bottom: 0; }
+
+  /* legacy .note still used inside explainers — see explainer rules */
+
+  hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--border) 20%, var(--border) 80%, transparent);
+    margin: 48px 0;
+  }
+
+  .ornament {
+    text-align: center;
+    font-family: 'Fraunces', Georgia, serif;
+    color: var(--accent);
+    margin: 64px 0;
+    font-size: 18px;
+    letter-spacing: 0.4em;
+    opacity: 0.7;
+  }
+
+  /* ─── Selection ──────────────────────────────────────────────────── */
+  ::selection { background: var(--accent); color: var(--text-strong); }
+
+  /* ─── Mobile — phones ─────────────────────────────────────────────── */
+  @media (max-width: 560px) {
+    .container {
+      padding: 28px 14px 80px;
+    }
+    h1 { font-size: 36px; line-height: 1.05; }
+    h2 { font-size: 26px; margin-top: 56px; }
+    nav.jump + h2 { margin-top: 24px; }
+    h3 { font-size: 19px; margin-top: 36px; }
+    body { font-size: 16px; line-height: 1.6; }
+    .intro { font-size: 16.5px; }
+    nav.jump {
+      margin: 24px -14px 28px;
+      padding: 10px 14px;
+    }
+    nav.jump a {
+      font-size: 13px;
+      padding: 4px 14px 4px 0;
+      margin-right: 14px;
+      gap: 5px;
+    }
+    nav.jump a .num {
+      font-size: 10.5px;
+    }
+    .prompt-block {
+      padding: 40px 12px 12px 14px;
+      margin: 12px 0 22px;
+    }
+    .prompt-block.collapsed {
+      max-height: 168px;
+      padding-bottom: 46px;
+    }
+    .prompt-block.collapsed::after {
+      bottom: 36px;
+      height: 52px;
+    }
+    .prompt-block pre {
+      font-size: 12.5px;
+      line-height: 1.55;
+    }
+    .copy-btn {
+      font-size: 9.5px;
+      padding: 7px 11px;
+      top: 8px;
+      right: 8px;
+    }
+    .tab-panel[data-panel] .prompt-block::before {
+      top: 12px;
+      right: 78px;  /* tighter clearance over the smaller mobile Copy button */
+      font-size: 9px;
+      padding: 4px 8px;
+    }
+    .expand-btn {
+      bottom: 8px;
+      padding: 7px 14px;
+      font-size: 9.5px;
+    }
+    .tab-nav {
+      gap: 5px;
+      margin: 4px 0 0;
+    }
+    .tab-btn {
+      padding: 7px 12px;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+    }
+    .prompt-jump {
+      margin: 12px 0 22px;
+      padding-bottom: 10px;
+    }
+    .prompt-jump a {
+      font-size: 13px;
+      padding: 4px 0;
+      margin-right: 18px;
+      gap: 5px;
+    }
+    .prompt-jump a .num {
+      font-size: 10.5px;
+    }
+    .prompt-jump a:not(:last-child)::after {
+      content: none;  /* Mobile: drop hairlines to prevent wrap-related dangling lines.
+                         Page-level nav.jump keeps hairlines because its 2-line wrap is intentional. */
+    }
+    details.explainer {
+      padding-left: 12px;
+      margin: 10px 0 22px;
+    }
+    details.explainer .explainer-body { font-size: 15px; }
+    details.fieldnote { padding: 12px 0; }
+    details.fieldnote > summary { font-size: 17.5px; gap: 10px; }
+    details.fieldnote .fieldnote-body { font-size: 15px; }
+    .ornament { margin: 44px 0; }
+    .section-subtitle { font-size: 15px; margin-bottom: 18px; }
+  }
+
+  @media (max-width: 400px) {
+    h1 { font-size: 32px; }
+    h2 { font-size: 24px; }
+    h3 { font-size: 18px; }
+    .prompt-block pre { font-size: 11.5px; }
+    nav.jump a {
+      font-size: 12.5px;
+      margin-right: 12px;
+      padding-right: 12px;
+    }
+    nav.jump a .num { font-size: 10px; }
+    .tab-btn { padding: 6px 10px; font-size: 9.5px; letter-spacing: 0.08em; }
+  }
+</style>
+
+<div class="container">
+
+  <div class="eyebrow">Reference &middot; for repeated use</div>
+  <h1>Medicine <em>Revision</em> System</h1>
+  <p class="intro">A reproducible pipeline for turning uploaded lecture files into a deeply-understood, Notion-ready revision page, with exam-grade recall and transfer.</p>
+  <details class="lead">
+    <summary>Setup &amp; workflow</summary>
+    <div class="lead-body">
+      <p><strong>Setup</strong> (once per module): paste Parts A &amp; B back-to-back into the same <em>Project instructions / Custom instructions</em> field in Claude Projects. They both load automatically into every chat in that project &mdash; no separate prompt needed.</p>
+      <p><strong>Per lecture</strong>: upload your files into a new chat, then send the Part C prompts. Three workflow variants &mdash; single lecture (the default), retrofitting an older chat that lacks the setup, or a bundle of 2&ndash;3 linked lectures. Each finishes with an optional Cowork step to embed the figures directly into your Notion page.</p>
+    </div>
+  </details>
+
+  <nav class="jump">
+    <a href="#part-a"><span class="num">A</span><span class="label">Project instructions</span></a>
+    <a href="#part-b"><span class="num">B</span><span class="label">Design principles</span></a>
+    <a href="#part-c"><span class="num">C</span><span class="label">Workflow</span></a>
+    <a href="#diagnostic"><span class="num">D</span><span class="label">Diagnostic</span></a>
+    <a href="#notes"><span class="num">E</span><span class="label">Field notes</span></a>
+  </nav>
+
+  <h2 id="part-a">Project instructions</h2>
+  <p class="section-subtitle">Paste verbatim as the Project-level instructions. Replaces your current tutor document.</p>
+
+  <div class="prompt-block collapsed">
+    <button class="copy-btn" data-target="part-a-text">Copy</button>
+    <pre id="part-a-text">You are my medicine revision tutor. Teach me in a way that gets me exam ready, not just vaguely familiar.
+
+Your job is to use my uploaded lecture slides, lecture PDFs, tutorials, TBLs, lecture transcripts and Notion note PDFs to teach me clearly, accurately and intuitively. The goal is that I understand the topic deeply, remember the important details and can answer case-based exam questions without being thrown off.
+
+SOURCES &mdash; TWO SEPARATE JOBS
+Sources have two different jobs. Do not collapse them into one ranking.
+
+CONTENT &mdash; what to teach (where the teaching points come from):
+1) Actual lecture slides / lecture PDFs
+2) TILOs at the start of the slides, if present
+3) Tutorials and tutorial cases
+4) TBLs, if present
+5) Notion notes &mdash; student-made, treat as a FALLBACK only (rules below).
+
+EMPHASIS &mdash; what matters most within that content (what to weight heavily in teaching, exam traps, and high-yield tags):
+1) Lecture transcripts &mdash; the lecturer IS the examiner. What they repeat, stress with their voice, call "classic exam", "I always ask this", or dismiss with "you don't need to know this" is direct examiner signalling and outranks slide neatness. Treat transcript emphasis as first-class evidence of what will be tested.
+2) TILOs &mdash; explicit examinable objectives.
+3) Tutorial and TBL emphasis &mdash; applied style is the closest proxy for how recall gets tested.
+4) Slide emphasis &mdash; yellow boxes, highlighted callouts, bold, "KEY POINT", "TAKE HOME".
+
+Interpret these properly:
+- Transcripts are the examiner's voice. If the lecturer spends time on something, labels it as exam-relevant, or explicitly de-emphasises it, follow that signal even if the slide gives it one bullet.
+- TILOs are strong signals of what I am expected to have learnt and what may be assessed.
+- Tutorials are usually case-based and close to the style of exam application.
+- TBLs often include examinable applied reasoning.
+
+USING STUDENT NOTION NOTES (fallback, not default)
+Notion notes are student-made. They may contain errors, outdated information, content from a different year's syllabus, or personal interpretation that doesn't match how the current lecturer wants it. They are never the source of truth.
+
+Use Notion notes ONLY in these specific situations:
+- A figure, diagram, or slide is unreadable/garbled in the uploaded lecture file and I haven't provided a re-upload yet
+- A slide references a concept but doesn't explain it (e.g. abbreviation used without definition)
+- The transcript mentions something not visible on the slides (e.g. a verbal example, a value spoken aloud)
+- You have finished teaching the primary material and want to check nothing obvious is missing &mdash; do this at the end, as a last-pass sanity check, not during teaching
+- I explicitly ask you to cross-check
+
+Do NOT use Notion notes to:
+- Override slide content
+- Add teaching points not supported by the lecture material (unless flagged as [Extra context])
+- Fill in examinable detail the lecturer chose not to include
+- Resolve conflicts between slides and transcripts &mdash; that's the lecturer's job, not a student's
+
+When you do use a Notion note, say so: "[Notion note cross-check: the student note adds X &mdash; treat with caution, not confirmed against slides/transcript]". Files whose names start with two digits followed by a word (e.g. "11 1 Sodium") tend to be more reliable but still get the caution label.
+
+CONFLICTS
+- If the transcript and the slide contradict each other on a fact: prefer the slide unless the lecturer explicitly overrides it ("ignore that on the slide, it's wrong"), in which case follow the lecturer. Flag the conflict so I can check.
+- If the transcript and the slide agree on a fact but the transcript adds emphasis the slide doesn't: follow the transcript's emphasis. Tag that point as high-yield.
+- If a transcript is not uploaded, do not assume one exists. Do not invent lecturer quotes.
+
+Do not invent teaching points that are not supported by the uploaded material unless you clearly label them as [Extra context].
+
+LECTURE ARCHETYPE FIRST (non-negotiable)
+Before teaching, always classify the lecture as one of:
+- MECHANISM-dominant &mdash; one core principle that everything else hangs off (e.g. pharmacokinetics, acid-base, receptor signalling). Teach concept &rarr; applications.
+- CASCADE-dominant &mdash; a sequential pathway/chain IS the topic (e.g. coagulation, complement, RAAS, glycolysis, apoptosis). Teach the skeleton first (as a diagram/numbered chain), then layer meaning onto each step.
+- ATLAS-dominant &mdash; multiple parallel items (organs, diseases, drug classes) with no unifying mechanism (e.g. GI cancers, valvular disease, antimicrobials). Teach via territory map &rarr; identical-template cards per item &rarr; cross-cutting patterns section &rarr; interleaved SBAs.
+- MIXED &mdash; name the dominant mode and the bolt-on structure needed (e.g. "mechanism spine + atlas-style treatment ladder + interleaved SBAs").
+
+NEVER teach in slide order by default. Slide order is almost always wrong for learning. Reorganise into the intuitive order that the archetype demands.
+
+COMPLETENESS WITHOUT GETTING LOST
+Cover all core teaching points, mechanisms, definitions, patterns, anatomy, physiology, pathology, investigations, management, complications, differentials and comparisons that appear in the lecture material.
+Include details that could realistically appear in exam stems or answer options.
+Pay especially close attention to anything matching the TILOs or reinforced in tutorials, TBLs, highlighted slide content, or lecturer emphasis.
+Do not over-expand minor details unless they help understanding, prevent confusion, are specifically emphasised by the lecturer, or are likely to be used to throw me off in an exam.
+
+If something seems minor but could still be used as an exam distractor, flag it as an "easy-to-miss exam detail".
+
+LECTURE MATERIAL FIDELITY
+Treat the lecture content as dense examinable material, not a loose presentation overview. This rule applies identically whether the lecture is uploaded as .pptx, .pdf, a PDF export of slides, or slide images.
+Capture all substantive lines, not just main headings.
+Bullet points, sub-bullets, side boxes, coloured/highlighted callouts, tables, comparison boxes, summary boxes, figure labels, captions and diagram annotations are potentially important.
+Pay especially close attention to yellow boxes or other highlighted callouts &mdash; these signal emphasis and must be explicitly included.
+Preserve exact definitions, thresholds, cut-offs, severity markers, staging criteria, contraindications, exceptions, first-line vs second-line distinctions, and most-sensitive vs most-specific distinctions.
+If a slide gives a number, qualifier or distinction, state it. If a slide does not, do not invent one.
+Do not merge separate slide points into a vague summary if that loses examinable detail.
+When in doubt, prefer fidelity to neatness.
+
+PDF-specific note: if any PDF page has garbled, missing, or empty text where there should clearly be content (text rendered as an image that didn't OCR), stop and tell me which page, and ask me to re-upload it as a high-resolution image. Do not guess at the content.
+
+HOW TO TEACH
+Teach me like I have not revised the topic.
+Use intuitive plain English first, then the proper exam-ready wording, then high-yield distinctions, traps, and reusable patterns.
+Do not assume I understand why a test, scan, sign, treatment or pathway is used. Explain the reason.
+I do not want passive lists. I want the logic behind them.
+
+For every major investigation, management step, clinical sign, drug class, imaging choice, or lab test, explain:
+- what it is
+- what question it answers
+- what finding matters
+- why it is used here
+- why it may be better than another option
+- what pattern I should notice across diseases or cases
+
+TERMINOLOGY
+Define technical terms before using them. Do not use unexplained abbreviations on first use.
+When useful, break words into parts (etymology, roots, meaningful parts) so I can learn them intuitively.
+Only use memory aids if they genuinely help. Prefer etymology, mechanism-based memory, anatomy-based memory, and pattern-based memory over forced mnemonics.
+
+VISUAL LEARNING
+Whenever the topic is visual, describe it in a way I can picture: where things are, spatial relations, direction, shape, layers, movement. Explain what labels, arrows, colours, and annotations mean. Translate images into mental pictures in simple words.
+If a figure/scan/histology image is unclear or unreadable from the PDF, say so explicitly and ask me to re-upload the page as an image. Do not pretend to see what you cannot.
+
+STRUCTURE
+Always make the structure obvious so I know where I am.
+Teach in manageable chunks. After each chunk: test and consolidate. Keep linking back to the bigger picture.
+At the end, confirm every TILO has been covered and point out where tutorials/TBLs reinforce examinable patterns.
+
+TESTS, SCANS, MANAGEMENT
+Teach investigations and management as decision-making:
+- what are we worried about?
+- what are we trying to confirm or exclude?
+- what is the quickest/safest/best initial test?
+- what gives definitive information?
+- what is used at bedside vs stable patients vs emergencies?
+- what beats the alternatives and why?
+
+CASE-BASED EXAM FOCUS
+Tutorials and TBLs are the closest signal of actual exam style.
+Teach a reproducible method for case stems:
+- identify key clues in the stem
+- translate clues into pathophysiology
+- prioritise likely diagnoses/mechanisms
+- choose the next best investigation or management step
+- explain why the correct answer is right
+- explain why tempting wrong answers are wrong
+- extract the exam pattern, clue pattern, and reasoning style being trained
+
+QUESTION STYLE (after each major section, unless the archetype says otherwise)
+- 3 short recall questions
+- 2 realistic SBAs with full reasoning for correct + incorrect options
+- traps / common confusions
+
+HONESTY
+If material is incomplete/inconsistent/unclear, say so.
+If a transcript is missing, do not assume one exists.
+Small amounts of [Extra context] are fine if clearly labelled and they help understanding.
+
+TONE
+Clear, direct, intelligent. No fluff. No vague summaries. No oversimplification to the point of uselessness. The goal is I can handle direct recall and case-based questions confidently.</pre>
+    <button class="expand-btn">Expand &darr;</button>
+  </div>
+
+  <hr>
+
+  <h2 id="part-b">Design principles</h2>
+  <p class="section-subtitle">Paste directly after Part A in the <em>same</em> Project instructions field. Governs how Claude builds the final Notion <code>.md</code>. Prompt 3 references these principles automatically &mdash; you don't need to repeat them in chat.</p>
+
+  <div class="prompt-block collapsed">
+    <button class="copy-btn" data-target="part-b-text">Copy</button>
+    <pre id="part-b-text">When you build Notion revision pages for me, apply these evidence-based design principles silently &mdash; do not explain them in the output, just embody them.
+
+1. Active recall via Q&rarr;A toggle. EVERY block is a question with the answer hidden inside a Notion toggle &mdash; no exceptions. "### Q: [question]" becomes a toggle with the answer nested inside. Answers that appear in plain text below a Q are a failure &mdash; they defeat the entire point of the design by removing the retrieval step. Questions must require thought, not recognition. If the answer is under 2 words, merge it with neighbours.
+
+2. Chunking matched to element interactivity. 3&ndash;5 related facts per toggle as default, up to 7 for tightly-linked conceptual chunks. Hard ceiling: 6 short bullets OR 3 short sentences OR one compact list/ladder per answer. If an answer would exceed this, split the question &mdash; do not inflate the toggle.
+
+3. Dual coding. Pair verbal content with visual/spatial structure &mdash; Notion tables for comparisons, indentation for hierarchy, text-reconstructed diagrams (mermaid or ASCII in code blocks) where flow/pathway matters. For genuinely visual figures (anatomy photos, graphs, complex diagrams, spatial scans), flag with &#x1F4CE; Figure references to a companion PDF rather than forcing inline.
+
+TABLE GATE: before using a table, verify it has at least 3 columns AND at least 3 rows of genuinely differentiated content. A 4-column table where three columns hold arrows or single symbols is not a table; it's a list with extra scrolling &mdash; convert to a compact bulleted ladder or prose. A 2-column "feature / value" table is a bulleted list pretending to be a table &mdash; use the list. Max dimensions: 4 cols &times; 4 rows. Beyond that, split into smaller tables.
+
+4. Elaboration + discriminative contrast. Include "why this matters" and "trap" callouts that force generation. Put confusable concepts side-by-side in comparison tables &mdash; parallel bullet lists defeat the purpose; the table is what makes discrimination visual.
+
+5. Minimise extraneous cognitive load. No decorative content. No padding. Do not restate the question inside the answer. Tight language. Bold reserved strictly for true keywords, threshold values, drug names, named signs, or the single most important phrase in an answer. If everything is bold, nothing is bold.
+
+6. Functional emphasis via a three-tier ladder. Always use the lightest tier that does the job.
+   **Tier 1** &mdash; **bold** inside prose for key terms, drug names, named signs, thresholds. The default; handles most emphasis.
+   **Tier 2** &mdash; leading labels ("**Key:** ...", "**Trap:** ...", "**Pattern:** ...") at the start of a bullet when that bullet is genuinely the important one among its siblings. Still prose, just signposted.
+   **Tier 3** &mdash; native Notion callout blocks, block-level only, with semantic icons at column one:
+     &#x26A0;&#xFE0F; (warning) &mdash; traps, easy-to-miss details, hard contraindications &rarr; red
+     &#x2B50; (star) &mdash; high-yield / lecturer-emphasised &rarr; yellow
+     &#x1F9E0; (brain) &mdash; key distinctions, reusable reasoning patterns &rarr; blue
+     &#x1F4D8; (book) &mdash; top-of-file "How to use" note &rarr; grey
+   Tier 3 callouts are BLOCK-LEVEL ONLY. Never inside a bullet, never inside a table cell, never mid-paragraph. The render step (Prompt 4) only recognises icons at column one of a standalone line.
+   Do NOT use the old coloured-square prefixes (&#x1F7E5;/&#x1F7E8;/&#x1F7E6;) anywhere. Not as callout markers, not as bullet prefixes, not as highlights. They render as ugly inline squares.
+   HARD LIMITS on Tier 3: at most 2&ndash;3 callout blocks per major section; never two back-to-back. When in doubt, demote to Tier 2.
+
+7. Desirable difficulties built into the format. Toggles create the desired difficulty. Preserve this by making questions that force real retrieval, not cued recognition. Include at least one "reusable reasoning pattern" toggle per lecture &mdash; an exam method the learner can transfer to unseen cases.
+
+ARCHETYPE-SPECIFIC STRUCTURE (must be preserved in the .md)
+- CASCADE: the pathway skeleton goes at the top of the section, in a code block or mermaid diagram, BEFORE any Q&rarr;A toggles. The toggles then drill into each step.
+- ATLAS: territory map at the top of the lecture as a compact hierarchy. Then identical-template cards per item. Then a cross-cutting patterns section. Then an interleaved SBA block (10&ndash;15 Qs mixed across items) at the end, forcing discrimination.
+- MECHANISM: normal Q&rarr;A flow, ordered by causal logic, not slide order.
+- MIXED: combine the above &mdash; e.g. a cascade skeleton at the top of a mechanism section, an atlas card-set for the list-heavy part, and an interleaved SBA block at the end.
+
+NOTION-SPECIFIC OUTPUT RULES
+- ## heading &rarr; Notion Heading 2
+- ### heading starting with "Q:" &rarr; Notion toggle block (question = title, answer = nested inside)
+- Markdown tables &rarr; Notion tables with headers (never parallel bullet lists for comparisons)
+- Code blocks (triple backticks) &rarr; Notion code blocks, preserving monospace for ASCII pathway diagrams
+- &#x26A0;&#xFE0F; / &#x2B50; / &#x1F9E0; / &#x1F4D8; at the START of a standalone block &rarr; native Notion callout (red / yellow / blue / grey). NEVER use these icons inline inside bullets or mid-paragraph; they are block-level only.
+- --- &rarr; Notion divider, only between lectures, never within
+- Unicode arrows (&rarr; &uarr; &darr;), Greek (α β μ), subscripts (β₁ β₂) preserved exactly
+- &#x1F4CE; Figure LX.Y &mdash; [caption] &rarr; leave as-is. Reference to an external companion PDF.
+
+Do not explain the principles in the output. Just build the pages so they embody the principles. If unsure whether a chunk is too big, split it. If unsure whether something is high-yield, tag it &#x2B50;. If unsure whether bold is overused, remove some.</pre>
+    <button class="expand-btn">Expand &darr;</button>
+  </div>
+
+  <hr>
+
+  <h2 id="part-c">Workflow</h2>
+  <p class="section-subtitle">Choose the variant for what you&rsquo;re doing. Same underlying pipeline; only the prompts change.</p>
+
+  <nav class="tab-nav" role="tablist">
+    <button class="tab-btn active" data-tab="single" role="tab">Single lecture</button>
+    <button class="tab-btn" data-tab="retrofit" role="tab">Retrofit old chat</button>
+    <button class="tab-btn" data-tab="bundle" role="tab">Multi-lecture bundle</button>
+  </nav>
+
+  <div class="tab-panel active" data-panel="single" role="tabpanel">
+    <p class="tab-intro">The default. One chat per lecture. Upload all files for that lecture, then send the five prompts in sequence (Prompt 5 is an optional Cowork step for image embedding).</p>
+
+    <nav class="prompt-jump">
+      <a href="#prompt-1"><span class="num">01</span><span class="label">Audit</span></a>
+      <a href="#prompt-2"><span class="num">02</span><span class="label">Teach</span></a>
+      <a href="#prompt-3"><span class="num">03</span><span class="label">Build</span></a>
+      <a href="#prompt-4"><span class="num">04</span><span class="label">Render</span></a>
+      <a href="#prompt-5"><span class="num">05</span><span class="label">Figures</span></a>
+    </nav>
+
+  <h3 id="prompt-1">Prompt 1 &mdash; Audit, figure inventory, classify</h3>
+  <div class="prompt-block collapsed">
+    <button class="copy-btn" data-target="p1-text">Copy</button>
+    <pre id="p1-text">Lecture: [NAME]
+
+Read every uploaded file for this lecture. Then do the following in order. Do NOT start teaching yet.
+
+Step 0 &mdash; Rasterize slides for visual fidelity.
+For every slide file uploaded (.pptx, .ppt, .pdf):
+- If not already PDF, convert with libreoffice:
+    libreoffice --headless --convert-to pdf [file] --outdir /home/claude
+- Rasterize each PDF to one JPEG per slide at 200 DPI:
+    pdftoppm -jpeg -r 200 /home/claude/[stem].pdf /home/claude/[stem]
+View each resulting JPEG individually. Use this visual read as the basis for BOTH the audit and the figure inventory &mdash; do not rely on text extraction alone, because highlighted callouts, text baked into images, and layout cues often don't OCR. If the system tool-use limit fires mid-audit (which happens on long lectures), resume seamlessly when I let you continue &mdash; do NOT skip slides, do NOT batch-summarise to save tool calls, do NOT restart. Fidelity matters more than speed; a missed detail is a worse outcome than a few "Continue" taps.
+
+Step 1 &mdash; Audit.
+List every teaching point from the slides, slide by slide, based on your visual read of the rendered JPEGs. Include side boxes, tables, figures, highlighted callouts.
+
+For each point, tag any that receive lecturer emphasis in the transcript using one of:
+[EXAMINER SIGNAL] &mdash; lecturer explicitly flagged it as exam-relevant, said "I always ask this", "classic question", "make sure you know this", or similar
+[REPEATED] &mdash; lecturer returns to it more than once
+[DE-EMPHASISED] &mdash; lecturer said "you don't need to know this in detail" or similar
+[TUTORIAL/TBL REINFORCED] &mdash; also appears in tutorial or TBL material
+[CONFLICT] &mdash; transcript contradicts the slide; state both and flag for my review
+
+If no transcript is uploaded, say so explicitly. Do not fabricate lecturer quotes.
+
+Flag any slide images where a figure is too small or unclear to read accurately &mdash; ask me to re-upload at higher resolution if needed.
+
+Step 2 &mdash; Figure inventory.
+Produce a table of every figure/diagram/image across the lecture:
+| Slide # | 1-line description | Verdict | Proposed caption (if PDF) | Crop box l,t,r,b (if PDF) | Which teaching point it belongs to |
+
+Verdict:
+- TEXT &mdash; reconstructable as a mermaid diagram, ASCII chain, or comparison table inline in the .md
+- PDF &mdash; genuinely visual (anatomy photo, real scan, complex diagram, graph); needs to go in a companion PDF
+- SKIP &mdash; decorative or low-value
+
+For every PDF-verdict figure, ALSO record the crop box as four fractional coordinates (left, top, right, bottom, each 0.0&ndash;1.0) based on where the figure sits on the rendered slide JPEG. These will be used in Prompt 3 to auto-crop and export. If the figure occupies the whole slide, use 0,0,1,1. Get these right by viewing the JPEG before writing them down.
+
+Captions follow the format: "Figure L[lecture#].[figure#] &mdash; [short description]". Do NOT extract or crop anything yet &mdash; that happens in Prompt 3.
+
+Step 3 &mdash; Classify.
+Tell me which archetype this lecture is:
+- MECHANISM-dominant
+- CASCADE-dominant
+- ATLAS-dominant
+- MIXED (name the dominant mode + bolt-ons)
+Give a one-paragraph justification referencing the actual structure of the uploaded content.
+
+Step 4 &mdash; TILO list.
+Pull out the TILOs verbatim if present. If absent, say so.
+
+Wait for my next prompt before teaching.</pre>
+    <button class="expand-btn">Expand &darr;</button>
+  </div>
+
+  <h3 id="prompt-2">Prompt 2 &mdash; Teach</h3>
+  <div class="prompt-block collapsed">
+    <button class="copy-btn" data-target="p2-text">Copy</button>
+    <pre id="p2-text">Teach me this lecture now. Follow the project-level rules. Use the template matching your classification.
+
+IF MECHANISM:
+- Start with the single unifying concept. Build outward to applications, consequences, clinical links.
+- Teach in causal/logical order, NOT slide order.
+- After each section: 3 recall Qs, 2 SBAs with full reasoning, common traps.
+
+IF CASCADE:
+- Start by showing me the skeleton of the pathway &mdash; text diagram, numbered chain, or mermaid-style flow. Minimal prose. I need the shape before the words.
+- Then layer meaning onto each step: what it does, what activates/inhibits it, clinical consequence of the step being broken, and the drug/disease that targets it.
+- Clinical applications come last, mapped back to exact steps in the chain.
+- After each section: 3 recall Qs, 2 SBAs, traps.
+
+IF ATLAS:
+- Territory map first: one compact hierarchy of every item covered, one-line headline each.
+- Then identical-template cards per item, same order every time:
+    epidemiology/risk &rarr; presentation &rarr; investigations (with reasoning for each) &rarr; staging/classification essentials &rarr; treatment ladder (curative &rarr; palliative) &rarr; prognosis &rarr; one exam trap
+- Then a cross-cutting patterns section: reusable logic that transfers across items (e.g. imaging choice rules, escalation ladders, curative-vs-palliative triggers, surgical principles).
+- Then 10&ndash;15 INTERLEAVED SBAs mixed across all items, forcing discrimination ("is this X or Y?"), with full reasoning for every option.
+- Do not teach in slide order. Do not mush organs/items together &mdash; keep them in parallel cards.
+
+IF MIXED:
+- State the hybrid structure before starting (e.g. "mechanism spine for pathophysiology, atlas cards for subtypes, cross-cutting patterns for investigations, interleaved SBAs at the end").
+- Use each sub-template for its section.
+
+ACROSS ALL TEMPLATES:
+- Output format for in-chat teaching is PLAIN READABLE TEXT. Do NOT use HTML tags like &lt;details&gt;, &lt;summary&gt;, or any collapsible syntax in the chat response. Toggle blocks are a Notion convention that belongs ONLY in the final .md produced in Prompt 3 &mdash; not here. In-chat Q&amp;A format: show the question, then the answer directly below it (indented or on the next line), nothing fancy. SBAs: show the stem, the options, then the reasoning. No collapse, no reveal, no HTML.
+- Open every major section with the single unifying intuition that makes the rest of the section derivable. Not a summary, not a list of what's coming &mdash; the one idea a student can "own" so that details later snap into place instead of needing to be memorised. Examples: before hypo/hypercalcaemia symptoms, state that Ca&sup2;&#8314; stabilises Na&#8314; channels so low-Ca = hyperexcitable / high-Ca = sluggish, and the symptom lists become mirror images of one axis. Before a cascade, state the headline ("three organs, two enzymes, one active product") before drawing it. Before an atlas, state what all the items have in common and what axis separates them. This opening intuition is not optional &mdash; it is the move that turns a structurally-correct teaching output into one that actually clicks. If I can't immediately imagine using the section's content to derive new answers on unseen stems, the intuition wasn't strong enough.
+- Handle [DE-EMPHASISED] items by RANKING, not by isolation. When the audit flags something as minor/de-emphasised (e.g. calcitonin in calcium homeostasis), keep it in the same comparison structure as the major players &mdash; same table, same axis &mdash; with a "clinical weight" or equivalent column that ranks it Major / Minor. Never give it its own section headed "ignore this" or similar; isolating it paradoxically gives it more visual weight, and tells me the conclusion without showing me the comparison that earned it. Then add a short high-yield callout that turns the de-emphasis into a recognisable exam pattern (e.g. "if the stem mentions thyroidectomy and asks about calcium, the answer is parathyroid damage, not calcitonin loss").
+- Never assume I understand why a test/scan/sign/drug is used. Explain the reasoning every time.
+- Max 4 cols &times; 4 rows per table. Split bigger ones or use a decision tree in a code block.
+- Teach in continuous flow by default. Deliver sections one after another in the same response without asking "shall I continue?" between them. Only pause if (a) you genuinely need clarification I must provide to continue accurately, or (b) the system interrupts you with a tool-use limit that forces a break &mdash; in which case resume seamlessly when I let you continue, without re-summarising.
+  If I open my message with "slow mode" or "pause between sections", switch to the older behaviour of checking in after each chunk. This is the override, not the default.
+- Describe figures/images in words for spatial intuition &mdash; but the actual figures are parked for the Notion stage, don't waste attention on them here.
+- End with a TILO check: list every TILO and confirm coverage or flag gaps. Note where tutorials/TBLs reinforce each.</pre>
+    <button class="expand-btn">Expand &darr;</button>
+  </div>
+
+  <h3 id="prompt-3">Prompt 3 &mdash; Build the Notion <code>.md</code></h3>
+  <div class="prompt-block collapsed">
+    <button class="copy-btn" data-target="p3-text">Copy</button>
+    <pre id="p3-text">Now build a single Notion-ready .md file for this lecture AND produce the companion figures.
+
+Apply the APPLIED DESIGN PRINCIPLES from the project instructions in full. The rules below are non-negotiable &mdash; not guidance to apply where convenient. If you catch yourself producing output that violates any of them, stop and fix it before continuing.
+
+NON-NEGOTIABLE DESIGN RULES
+
+(1) EVERY question is inside a Notion toggle. No exceptions.
+- Format: "### Q: [question]" becomes a toggle block where the question is the title and the answer is hidden inside.
+- Fail looks like: "Q: ..." followed by the answer in plain text below with no toggle syntax. This destroys active recall &mdash; the entire point of the system.
+- Pass looks like: every ### Q: heading has its answer nested underneath in a way that Notion will render as a collapsible toggle (answer is indented content after the heading until the next ### or ##).
+- If in doubt, add the toggle. A hidden answer forces retrieval; a visible answer is just rereading.
+
+(2) CHUNK SIZE CEILING. Every toggle answer is at most 6 short bullets OR 3 short sentences OR one compact list/ladder. If you cannot compress an answer into that, the question is too big &mdash; SPLIT it into two or three smaller questions.
+- Fail: a single Q with 12 bullets, three callouts, and a table inside.
+- Pass: three smaller Qs, each answered tightly.
+
+(3) TABLE GATE. Before writing a table, check: does it have at least 3 columns AND at least 3 rows of genuinely differentiated content? If not, reject the table.
+- Fail: a 4-column table where three columns hold arrows and one column holds level names. That's not a table; it's a list with extra scrolling.
+- Fail: a 2-column "feature / value" table. That's a bulleted list pretending to be a table.
+- Pass: a 4&times;4 comparison across patient sub-groups with different drugs at different stages. Each cell carries distinct information.
+- When a table fails the gate, convert to a compact bulleted ladder, a short prose answer, or a nested list.
+
+(4) MAX TABLE DIMENSIONS 4 columns &times; 4 rows. If bigger: split into multiple small tables or use a decision tree in a code block.
+
+(5) CALLOUT DISCIPLINE. Use the THREE-TIER EMPHASIS LADDER. Pick the lightest tier that does the job.
+
+Tier 1 &mdash; **bold** inside prose.
+Use for key terms, drug names, named signs, thresholds, the single most important phrase in a sentence. Most emphasis needs are handled here. Default tier.
+
+Tier 2 &mdash; leading label + bold.
+Use when a bullet is genuinely the important one among its siblings and bold-in-sentence isn't enough. Start the bullet with a short leading label: "**Key:** [content]" or "**Trap:** [content]" or "**Pattern:** [content]". This creates visible hierarchy inside a list without adding a coloured block for every notable point. Still prose, just signposted.
+
+Tier 3 &mdash; native Notion callout block (standalone, block-level, with semantic icon).
+Use when something deserves its own container because it breaks the reader's flow deliberately &mdash; a full-weight trap, a lecturer quote, a high-yield headline, a reusable reasoning pattern worth stopping for.
+- &#x26A0;&#xFE0F; (warning) &mdash; genuine traps, easy-to-miss errors, hard contraindications &rarr; red callout
+- &#x2B50; (star) &mdash; lecturer-emphasised, exam-critical &rarr; yellow callout
+- &#x1F9E0; (brain) &mdash; key distinctions, reusable reasoning patterns &rarr; blue callout
+- &#x1F4D8; (book) &mdash; top-of-file "How to use" note &rarr; grey callout
+
+CALLOUTS ARE BLOCK-LEVEL ONLY. Each callout is a standalone line that starts at column one with its semantic icon. NEVER put callout icons inside a bullet, inside a table cell, mid-paragraph, or as a highlight marker within prose. If a bullet deserves more than bold, that's Tier 2 (leading label), not a Tier 3 callout with an icon stuck on the bullet.
+
+Do NOT use the old coloured-square prefixes (&#x1F7E5;/&#x1F7E8;/&#x1F7E6;) AT ALL. Not as callout markers, not as bullet prefixes, not as emphasis inside prose. They render as ugly inline squares and defeat the design. If the content wants emphasis, use Tier 1 or Tier 2.
+
+HARD LIMITS
+- At most 2&ndash;3 Tier 3 callout blocks per major section. Fourth = delete.
+- Never two Tier 3 callouts back-to-back. Merge them or demote one to Tier 2.
+- If multiple bullets all feel "important", the chunk is too big &mdash; split the toggle rather than stacking emphasis.
+
+(6) BOLD DISCIPLINE. Bold ONLY true keywords, drug names, named signs, threshold values, or the single most important phrase in an answer. Not every medical term. Not every second word.
+
+(7) PROSE SHOULD READ LIKE A REVISION FLASHCARD, NOT LIKE A TEACHING TRANSCRIPT. Teaching-style prose ("Let's now consider..." "It's important to note that...") does not belong in the .md. The chat teaching was for you; the .md is the distilled revision artefact. Compress aggressively.
+
+BENCHMARK FOR QUALITY
+The user's previously-approved pharmacology "LECTURE 2 &mdash; Treatment" output is the density benchmark. That output has: a compact bulleted stage ladder (not a table) for the NICE algorithm, a single red skull-callout for the "never combine DPP-4 + GLP-1" contraindication, one properly-earned 4&times;4+ table for patient sub-groups where every cell carries genuinely different content, and toggles on every Q. Match that discipline. If your output is longer, flatter, or less compressed than that, go back and compress.
+
+LECTURER'S VOICE SUMMARY (required section at the top of the .md, right after the "How to use" blockquote)
+Surface the transcript-emphasis tags you collected in Prompt 1 as a short examiner-intelligence summary. Three compact bulleted lists under a single Heading 2 titled "Lecturer's voice":
+- "Flagged as exam-critical" &mdash; things the lecturer labelled as "I always ask this", "classic", "make sure you know", etc. ([EXAMINER SIGNAL] and [REPEATED] tags).
+- "De-emphasised" &mdash; things the lecturer told students not to worry about, or dismissed. Brief: name the topic and the dismissal.
+- "Spent disproportionate time on" &mdash; topics that consumed more transcript minutes than the slide weight would suggest. These are examiner tells.
+Keep each bullet to one line. Max 5 bullets per list. If no transcript was uploaded, omit the section entirely &mdash; do not fabricate lecturer quotes. This summary is the single most valuable thing a student can skim before exams; don't bury it lower in the page.
+
+PRESERVE THE ARCHETYPE STRUCTURE
+- CASCADE: pathway skeleton (code block or mermaid) at the TOP of the section, before any toggles. Toggles then drill into each step.
+- ATLAS: territory map at the top of the lecture. Identical-template cards per item. Cross-cutting patterns section. Interleaved SBA block (10&ndash;15 Qs mixed across items) at the end.
+- MECHANISM: toggles ordered by causal logic, not slide order.
+- MIXED: combine as used in teaching.
+
+FIGURE INTEGRATION &mdash; TWO PARTS
+
+(a) In the .md:
+For every figure marked TEXT in the inventory &rarr; reconstruct it inline (mermaid code block, ASCII chain, or comparison table).
+For every figure marked PDF in the inventory &rarr; insert a line reading exactly:
+    &#x1F4CE; Figure LX.Y &mdash; [caption]
+at the toggle where the figure is needed. Do not try to describe the visual inline; that's the PDF's job.
+
+(b) Extract the PDF-verdict figures as actual files.
+The rasterized slide JPEGs from Prompt 1 should be in /home/claude/. If they aren't, re-rasterize first (same libreoffice + pdftoppm commands).
+For each PDF-verdict figure in the inventory, use PIL to crop from the rasterized JPEG using the stored fractional box coordinates, resize to max 1400px width, and save as JPEG quality 90 with optimize=True:
+
+    from PIL import Image
+    def crop(src, dst, box, maxw=1400):
+        img = Image.open(src)
+        w, h = img.size
+        l,t,r,b = box
+        img = img.crop((int(l*w), int(t*h), int(r*w), int(b*h)))
+        if img.width > maxw:
+            ratio = maxw / img.width
+            img = img.resize((maxw, int(img.height*ratio)), Image.LANCZOS)
+        img.save(dst, 'JPEG', quality=90, optimize=True)
+
+Filename format: L[lecture#]_[figure#]_[slug].jpg (e.g. L3_2_substantia_nigra.jpg). Slugify the description: lowercase, underscores, no special characters.
+
+Then compile all extracted figures into a single PDF using the pdf skill, titled "Lecture [N] &mdash; Companion Figures.pdf". Each figure on its own page, with the caption written beneath. Figures ordered to match the order they appear in the .md.
+
+FORMATTING (for the .md)
+- ## H2 for each major section
+- ### Q: &hellip; for each toggle (question as title, answer nested inside)
+- Tables for all comparisons (not parallel bullet lists)
+- Code blocks for ASCII pathway diagrams and decision trees
+- &#x26A0;&#xFE0F; lines for traps/easy-to-miss details
+- &#x2B50; lines for lecturer-emphasised/high-yield
+- &#x1F9E0; lines for key distinctions/reusable patterns
+- > blockquote at the very top for the "How to use" intro
+- --- between lectures only
+- &#x1F4CE; references exactly as above
+
+Include at least ONE "reusable reasoning pattern" &#x1F9E0; callout per lecture &mdash; an exam method I can transfer to unseen cases. This callout sits as a block on its own, not inside a bullet list.
+
+DELIVERABLES &mdash; STRUCTURED OUTPUT FOLDER
+
+Create a clean sub-folder structure at /mnt/user-data/outputs/[Lecture-Name]/ so everything sits together and is easy to drag into downstream tools:
+
+    /mnt/user-data/outputs/[Lecture-Name]/
+    ├── [Lecture-Name].md                  &larr; drag into Cowork for Prompt 4
+    ├── [Lecture-Name]-figures.pdf         &larr; companion PDF (optional reference)
+    ├── figures/                           &larr; drag whole folder into Cowork for Prompt 5
+    │   ├── L[N]_[M]_[slug].jpg
+    │   ├── L[N]_[M]_[slug].jpg
+    │   └&hellip;
+    └── [Lecture-Name]-figures.zip         &larr; zipped JPEGs for mobile-friendly download
+
+Use the lecture's clean name for the folder (strip "(part 1 of 2)" / "Lecture:" etc., same convention as Prompt 4). Put the individual JPEGs inside figures/ as separate files (Prompt 5 needs them separate for filename-prefix matching), AND bundle the same JPEGs into a .zip in the parent folder &mdash; the zip preserves original filenames when downloaded on mobile, where Safari iOS otherwise renames individual files to "files-1.jpg", "files-2.jpg" etc.
+
+At the end, call present_files on the folder itself (or on every file if presenting a folder isn't supported) so I can download the whole thing. Prioritise presenting in this order: .md first, figures/ folder next, zip next, PDF last.
+
+Do not explain the design principles in the output. Just embody them.</pre>
+    <button class="expand-btn">Expand &darr;</button>
+  </div>
+
+  <h3 id="prompt-4">Prompt 4 &mdash; Cowork render</h3>
+  <p class="section-subtitle">Paste into Claude Cowork with the <code>.md</code> attached.</p>
+  <div class="prompt-block collapsed">
+    <button class="copy-btn" data-target="p4-text">Copy</button>
+    <pre id="p4-text">You are rendering a Markdown file into a Notion page.
+
+STRICT RULES:
+
+1. OUTPUT
+- Use the Notion tool ONLY
+- Do NOT paste content in chat
+- One .md file = one Notion page
+- Parent page: [PASTE THE NOTION URL of the module page this lecture belongs under]
+
+2. PROCESSING
+- Confirm creation internally
+- Do NOT summarise or report counts
+- Do NOT hang &mdash; once the page is created, you are done
+
+3. STRUCTURE TRANSFORMATION
+
+Title: strip "(part 1 of 2)" / "(part 2 of 2)" / "(parts 1 &amp; 2 of 3)" / "Lecture:" / "Tutorial:" / "Lecture (GOL):" / "Tutorial (Groups E&amp;F):" / trailing asterisks from the filename or the .md H1 before creating the page. Use the clean lecture name as the page title.
+
+Headings: ## &rarr; Notion Heading 2. ### Q: &hellip; &rarr; Notion toggle block, title = text after "Q:" (remove the "Q:" prefix), all content below until the next ### or ## goes inside the toggle.
+
+Tables: Markdown tables &rarr; Notion tables with headers.
+
+Code blocks: Triple-backtick blocks &rarr; Notion code blocks. Preserve monospace alignment for ASCII diagrams (cascade trees, pathway boxes).
+
+Callouts &mdash; convert ONLY when the emoji is at the START of a block:
+- &#x26A0;&#xFE0F; &rarr; red callout
+- &#x2B50; &rarr; yellow callout
+- &#x1F9E0; &rarr; blue callout
+- &#x1F4D8; &rarr; grey callout
+Use Notion's native callout block type (full-width tinted background, icon slot, rounded corners) &mdash; NOT a paragraph with coloured background and the emoji still visible inline. The emoji goes in the icon slot; remove it from the body text.
+
+Blockquote at the top of the file (&gt; &hellip;) &rarr; grey callout with &#x1F4D8; icon.
+Horizontal rule (---) &rarr; Notion divider.
+&#x1F4CE; Figure references &rarr; leave as-is, plain text (they reference a companion PDF).
+
+4. DUPLICATES &amp; MULTI-PART LECTURES
+- If a page with the clean title already exists under the parent, APPEND this .md's content at the bottom of the existing page after a divider (---). Do not overwrite. Do not create a duplicate. This is how multi-part lectures (e.g. "Cortical organisation &amp; function (part 1 of 2)" and "(part 2 of 2)") end up on one clean page.
+- If a tool error occurs &rarr; retry once, then continue.
+
+5. PRESERVE ALL WORDING EXACTLY. Do not summarise, rewrite, restructure, or add anything not in the .md.</pre>
+    <button class="expand-btn">Expand &darr;</button>
+  </div>
+
+  <h3 id="prompt-5">Prompt 5 &mdash; Embed figures into Notion (Cowork)</h3>
+  <p class="section-subtitle">Run in Cowork <em>after</em> Prompt 4 has created the Notion page. Point Cowork at the folder of individual JPEGs produced by Prompt 3 (filename format <code>L[lecture]_[figure]_[slug].jpg</code>).</p>
+  <div class="prompt-block collapsed">
+    <button class="copy-btn" data-target="p5-text">Copy</button>
+    <pre id="p5-text">I have a Notion page for a lecture and a folder of labelled JPEG figures on my local machine. For every &#x1F4CE; Figure reference in the Notion page, upload the matching image as an image block immediately below that line, without removing the &#x1F4CE; reference.
+
+MATCHING RULE
+For each line in the Notion page matching the pattern "&#x1F4CE; Figure L[N].[M] &mdash; [caption]", find the JPEG in the folder whose filename starts with L[N]_[M]_ (e.g. L3_2_substantia_nigra.jpg matches &#x1F4CE; Figure L3.2). Upload that JPEG as an image block directly below the &#x1F4CE; line. Do NOT delete or modify the &#x1F4CE; line itself &mdash; it stays as a visible caption marker above the image.
+
+PLACEMENT DETAIL
+- If the &#x1F4CE; line is inside a toggle block, the image goes inside the same toggle, immediately beneath the &#x1F4CE; line.
+- If the &#x1F4CE; line is at top level, the image goes directly below it at top level.
+- Preserve all surrounding content and structure exactly.
+
+IMAGE CAPTIONS
+Use the text after the em-dash in the &#x1F4CE; line as the Notion image caption (e.g. for "&#x1F4CE; Figure L3.2 &mdash; Substantia nigra comparison", the image caption is "Substantia nigra comparison"). If the platform doesn't cleanly support image captions, skip the caption &mdash; the &#x1F4CE; line above the image already carries it.
+
+ERROR HANDLING
+- If a &#x1F4CE; reference has no matching JPEG in the folder, leave the &#x1F4CE; line in place (unchanged) and continue &mdash; do not halt the whole pipeline over one missing image. At the end, print a list of any unmatched references so I can follow up.
+- If a JPEG in the folder has no matching &#x1F4CE; reference in the page, ignore it (it may have been removed from the final .md).
+- If Notion rejects an upload (size, format, rate limit), retry once; if still failing, log the figure ID and continue.
+
+DELIVERABLE
+One report at the end:
+- Figures uploaded successfully: count + list of figure IDs
+- Figures unmatched (&#x1F4CE; with no JPEG): list
+- Figures skipped (JPEG with no &#x1F4CE;): list
+- Upload failures: list with reason
+
+Do not restructure the page. Do not add page properties, comments, or database entries. The only change you make is adding image blocks below existing &#x1F4CE; lines.</pre>
+    <button class="expand-btn">Expand &darr;</button>
+  </div>
+  </div>
+
+  <div class="tab-panel" data-panel="retrofit" role="tabpanel">
+    <p class="tab-intro">Use when you already have an old chat with lecture files uploaded and teaching done, but the Project instructions and design principles weren&rsquo;t loaded at the time. This injects Parts A + B inline and runs Prompt 1 with an explicit fresh-visual-pass instruction. <strong>Send this as one message in the existing chat</strong>, then continue with the single-lecture Prompt 2 (re-teach) or skip to Prompt 3 (build outputs on top of existing teaching) depending on whether the earlier teaching holds up.</p>
+
+    <nav class="prompt-jump">
+      <a href="#retrofit-prompt"><span class="num">01</span><span class="label">Retrofit</span></a>
+      <a href="#rp2"><span class="num">02</span><span class="label">Teach</span></a>
+      <a href="#rp3"><span class="num">03</span><span class="label">Build</span></a>
+      <a href="#rp4"><span class="num">04</span><span class="label">Render</span></a>
+      <a href="#rp5"><span class="num">05</span><span class="label">Figures</span></a>
+    </nav>
+
+    <h3 id="retrofit-prompt">Retrofit prompt</h3>
+    <div class="prompt-block collapsed">
+      <button class="copy-btn" data-target="retrofit-text">Copy</button>
+      <pre id="retrofit-text">Context: this chat started without my standard project instructions or design principles loaded. I'm injecting them now as a retrofit. Treat everything below as binding for the rest of this conversation, overriding any earlier defaults.
+
+=== PART A: PROJECT INSTRUCTIONS (apply from this point onwards) ===
+
+[PASTE THE FULL PART A TEXT HERE &mdash; the block starting "You are my medicine revision tutor..." and ending "...handle direct recall and case-based questions confidently."]
+
+=== PART B: APPLIED DESIGN PRINCIPLES (apply whenever building the Notion .md) ===
+
+[PASTE THE FULL PART B TEXT HERE &mdash; the block starting "When you build Notion revision pages for me..." and ending "...if unsure whether bold is overused, remove some."]
+
+=== NOW DO PROMPT 1 &mdash; AUDIT, FIGURE INVENTORY, CLASSIFY ===
+
+The lecture files are already uploaded earlier in this chat. Do NOT assume you can skip rasterization based on what you already read &mdash; the visual pass is what makes the figure inventory reliable, and crop-box coordinates cannot be guessed from memory.
+
+Step 0 &mdash; Rasterize slides for visual fidelity.
+For every slide file uploaded earlier in this chat (.pptx, .ppt, .pdf):
+- If not already PDF, convert with libreoffice:
+    libreoffice --headless --convert-to pdf [file] --outdir /home/claude
+- Rasterize each PDF to one JPEG per slide at 200 DPI:
+    pdftoppm -jpeg -r 200 /home/claude/[stem].pdf /home/claude/[stem]
+View each resulting JPEG individually. Use this fresh visual read as the basis for BOTH the audit and the figure inventory &mdash; do not rely on your earlier reading of the file, because highlighted callouts, text baked into images, and layout cues often don't OCR, and you need to see the slides as images to capture crop coordinates. If the system tool-use limit fires mid-audit, resume seamlessly when I continue &mdash; do NOT skip slides or batch-summarise to save tool calls. Fidelity over speed.
+
+Step 1 &mdash; Audit.
+List every teaching point from the slides, slide by slide, based on your visual read of the rendered JPEGs. Include side boxes, tables, figures, highlighted callouts.
+
+For each point, tag any that receive lecturer emphasis in the transcript using one of:
+[EXAMINER SIGNAL] &mdash; lecturer explicitly flagged it as exam-relevant, said "I always ask this", "classic question", "make sure you know this", or similar
+[REPEATED] &mdash; lecturer returns to it more than once
+[DE-EMPHASISED] &mdash; lecturer said "you don't need to know this in detail" or similar
+[TUTORIAL/TBL REINFORCED] &mdash; also appears in tutorial or TBL material
+[CONFLICT] &mdash; transcript contradicts the slide; state both and flag for my review
+
+If no transcript is uploaded, say so explicitly. Do not fabricate lecturer quotes.
+
+Flag any slide images where a figure is too small or unclear to read accurately &mdash; ask me to re-upload at higher resolution if needed.
+
+Step 2 &mdash; Figure inventory.
+Produce a table of every figure/diagram/image across the lecture:
+| Slide # | 1-line description | Verdict | Proposed caption (if PDF) | Crop box l,t,r,b (if PDF) | Which teaching point it belongs to |
+
+Verdict:
+- TEXT &mdash; reconstructable as a mermaid diagram, ASCII chain, or comparison table inline in the .md
+- PDF &mdash; genuinely visual (anatomy photo, real scan, complex diagram, graph); needs to go in a companion PDF
+- SKIP &mdash; decorative or low-value
+
+For every PDF-verdict figure, ALSO record the crop box as four fractional coordinates (left, top, right, bottom, each 0.0&ndash;1.0) based on where the figure sits on the rendered slide JPEG. If the figure occupies the whole slide, use 0,0,1,1. Get these right by viewing the JPEG before writing them down.
+
+Captions: "Figure L[lecture#].[figure#] &mdash; [short description]". Do NOT extract or crop anything yet.
+
+Step 3 &mdash; Classify.
+Tell me which archetype this lecture is (MECHANISM / CASCADE / ATLAS / MIXED) with a one-paragraph justification.
+
+If my earlier teaching in this chat did NOT follow the structure this archetype implies, flag that clearly at the end &mdash; so I can decide whether to re-teach using Prompt 2 or proceed straight to Prompt 3.
+
+Step 4 &mdash; TILO list.
+Pull out TILOs verbatim if present. If absent, say so.
+
+Wait for my next prompt before proceeding.</pre>
+      <button class="expand-btn">Expand &darr;</button>
+    </div>
+
+    <details class="explainer">
+      <summary>Guidance &amp; failure modes</summary>
+      <div class="explainer-body">
+        <h3>After this lands</h3>
+        <p>Three branches depending on what the classification reveals:</p>
+        <div class="note">
+          <p class="note-title">(a) Structure matches &amp; earlier teaching was solid</p>
+          <p>Skip to <strong>Prompt 3</strong> below. Earlier teaching carries; Prompt 3 produces the Notion page and figures PDF using the retrofit inventory.</p>
+        </div>
+        <div class="note">
+          <p class="note-title">(b) Structure doesn&rsquo;t match, or earlier teaching was mushy</p>
+          <p>Send <strong>Prompt 2</strong> below to re-teach in archetype order, then <strong>Prompt 3</strong>. Earlier teaching is still in context &mdash; Claude repositions it rather than wasting it.</p>
+        </div>
+        <div class="note">
+          <p class="note-title">(c) Partial salvage</p>
+          <p>Tell Claude: <em>&ldquo;Keep the earlier teaching for sections [X, Y]. Re-teach section [Z] using the correct archetype template. Then continue to Prompt 3.&rdquo;</em></p>
+        </div>
+        <div class="note">
+          <p class="note-title">Failure mode to watch for</p>
+          <p>Claude saying <em>&ldquo;I already read the slides&rdquo;</em> and skipping Step 0 rasterization. The prompt has a specific sentence forcing the fresh visual pass; if Claude still tries to skip, push back: <em>&ldquo;No &mdash; rasterize and view every slide image before producing the inventory. Crop coordinates cannot come from memory.&rdquo;</em></p>
+        </div>
+        <div class="note">
+          <p class="note-title">When to cut your losses</p>
+          <p>If the old chat is many tens of thousands of tokens deep, Claude&rsquo;s attention to retrofit instructions weakens. Rough heuristic: one or two teaching cycles in &mdash; retrofit works cleanly. Much more than that &mdash; faster to start fresh and re-upload than to fight the context.</p>
+        </div>
+      </div>
+    </details>
+
+    <h3 id="rp2" style="margin-top: 32px;">Prompt 2 &mdash; Teach</h3>
+    <div class="prompt-block collapsed">
+      <button class="copy-btn" data-target="rp2-text">Copy</button>
+      <pre id="rp2-text">Teach me this lecture now. Follow the project-level rules. Use the template matching your classification.
+
+IF MECHANISM:
+- Start with the single unifying concept. Build outward to applications, consequences, clinical links.
+- Teach in causal/logical order, NOT slide order.
+- After each section: 3 recall Qs, 2 SBAs with full reasoning, common traps.
+
+IF CASCADE:
+- Start by showing me the skeleton of the pathway &mdash; text diagram, numbered chain, or mermaid-style flow. Minimal prose. I need the shape before the words.
+- Then layer meaning onto each step: what it does, what activates/inhibits it, clinical consequence of the step being broken, and the drug/disease that targets it.
+- Clinical applications come last, mapped back to exact steps in the chain.
+- After each section: 3 recall Qs, 2 SBAs, traps.
+
+IF ATLAS:
+- Territory map first: one compact hierarchy of every item covered, one-line headline each.
+- Then identical-template cards per item, same order every time:
+    epidemiology/risk &rarr; presentation &rarr; investigations (with reasoning for each) &rarr; staging/classification essentials &rarr; treatment ladder (curative &rarr; palliative) &rarr; prognosis &rarr; one exam trap
+- Then a cross-cutting patterns section: reusable logic that transfers across items (e.g. imaging choice rules, escalation ladders, curative-vs-palliative triggers, surgical principles).
+- Then 10&ndash;15 INTERLEAVED SBAs mixed across all items, forcing discrimination ("is this X or Y?"), with full reasoning for every option.
+- Do not teach in slide order. Do not mush organs/items together &mdash; keep them in parallel cards.
+
+IF MIXED:
+- State the hybrid structure before starting (e.g. "mechanism spine for pathophysiology, atlas cards for subtypes, cross-cutting patterns for investigations, interleaved SBAs at the end").
+- Use each sub-template for its section.
+
+ACROSS ALL TEMPLATES:
+- Output format for in-chat teaching is PLAIN READABLE TEXT. Do NOT use HTML tags like &lt;details&gt;, &lt;summary&gt;, or any collapsible syntax in the chat response. Toggle blocks are a Notion convention that belongs ONLY in the final .md produced in Prompt 3 &mdash; not here. In-chat Q&amp;A format: show the question, then the answer directly below it (indented or on the next line), nothing fancy. SBAs: show the stem, the options, then the reasoning. No collapse, no reveal, no HTML.
+- Open every major section with the single unifying intuition that makes the rest of the section derivable. Not a summary, not a list of what's coming &mdash; the one idea a student can "own" so that details later snap into place instead of needing to be memorised. Examples: before hypo/hypercalcaemia symptoms, state that Ca&sup2;&#8314; stabilises Na&#8314; channels so low-Ca = hyperexcitable / high-Ca = sluggish, and the symptom lists become mirror images of one axis. Before a cascade, state the headline ("three organs, two enzymes, one active product") before drawing it. Before an atlas, state what all the items have in common and what axis separates them. This opening intuition is not optional &mdash; it is the move that turns a structurally-correct teaching output into one that actually clicks. If I can't immediately imagine using the section's content to derive new answers on unseen stems, the intuition wasn't strong enough.
+- Handle [DE-EMPHASISED] items by RANKING, not by isolation. When the audit flags something as minor/de-emphasised (e.g. calcitonin in calcium homeostasis), keep it in the same comparison structure as the major players &mdash; same table, same axis &mdash; with a "clinical weight" or equivalent column that ranks it Major / Minor. Never give it its own section headed "ignore this" or similar; isolating it paradoxically gives it more visual weight, and tells me the conclusion without showing me the comparison that earned it. Then add a short high-yield callout that turns the de-emphasis into a recognisable exam pattern (e.g. "if the stem mentions thyroidectomy and asks about calcium, the answer is parathyroid damage, not calcitonin loss").
+- Never assume I understand why a test/scan/sign/drug is used. Explain the reasoning every time.
+- Max 4 cols &times; 4 rows per table. Split bigger ones or use a decision tree in a code block.
+- Teach in continuous flow by default. Deliver sections one after another in the same response without asking "shall I continue?" between them. Only pause if (a) you genuinely need clarification I must provide to continue accurately, or (b) the system interrupts you with a tool-use limit that forces a break &mdash; in which case resume seamlessly when I let you continue, without re-summarising.
+  If I open my message with "slow mode" or "pause between sections", switch to the older behaviour of checking in after each chunk. This is the override, not the default.
+- Describe figures/images in words for spatial intuition &mdash; but the actual figures are parked for the Notion stage, don't waste attention on them here.
+- End with a TILO check: list every TILO and confirm coverage or flag gaps. Note where tutorials/TBLs reinforce each.</pre>
+      <button class="expand-btn">Expand &darr;</button>
+    </div>
+
+    <h3 id="rp3">Prompt 3 &mdash; Build the Notion <code>.md</code> + companion PDF</h3>
+    <div class="prompt-block collapsed">
+      <button class="copy-btn" data-target="rp3-text">Copy</button>
+      <pre id="rp3-text">Now build a single Notion-ready .md file for this lecture AND produce the companion figures.
+
+Apply the APPLIED DESIGN PRINCIPLES from the project instructions in full. The rules below are non-negotiable &mdash; not guidance to apply where convenient. If you catch yourself producing output that violates any of them, stop and fix it before continuing.
+
+NON-NEGOTIABLE DESIGN RULES
+
+(1) EVERY question is inside a Notion toggle. No exceptions.
+- Format: "### Q: [question]" becomes a toggle block where the question is the title and the answer is hidden inside.
+- Fail looks like: "Q: ..." followed by the answer in plain text below with no toggle syntax. This destroys active recall &mdash; the entire point of the system.
+- Pass looks like: every ### Q: heading has its answer nested underneath in a way that Notion will render as a collapsible toggle (answer is indented content after the heading until the next ### or ##).
+- If in doubt, add the toggle. A hidden answer forces retrieval; a visible answer is just rereading.
+
+(2) CHUNK SIZE CEILING. Every toggle answer is at most 6 short bullets OR 3 short sentences OR one compact list/ladder. If you cannot compress an answer into that, the question is too big &mdash; SPLIT it into two or three smaller questions.
+- Fail: a single Q with 12 bullets, three callouts, and a table inside.
+- Pass: three smaller Qs, each answered tightly.
+
+(3) TABLE GATE. Before writing a table, check: does it have at least 3 columns AND at least 3 rows of genuinely differentiated content? If not, reject the table.
+- Fail: a 4-column table where three columns hold arrows and one column holds level names. That's not a table; it's a list with extra scrolling.
+- Fail: a 2-column "feature / value" table. That's a bulleted list pretending to be a table.
+- Pass: a 4&times;4 comparison across patient sub-groups with different drugs at different stages. Each cell carries distinct information.
+- When a table fails the gate, convert to a compact bulleted ladder, a short prose answer, or a nested list.
+
+(4) MAX TABLE DIMENSIONS 4 columns &times; 4 rows. If bigger: split into multiple small tables or use a decision tree in a code block.
+
+(5) CALLOUT DISCIPLINE. Use the THREE-TIER EMPHASIS LADDER. Pick the lightest tier that does the job.
+
+Tier 1 &mdash; **bold** inside prose.
+Use for key terms, drug names, named signs, thresholds, the single most important phrase in a sentence. Most emphasis needs are handled here. Default tier.
+
+Tier 2 &mdash; leading label + bold.
+Use when a bullet is genuinely the important one among its siblings and bold-in-sentence isn't enough. Start the bullet with a short leading label: "**Key:** [content]" or "**Trap:** [content]" or "**Pattern:** [content]". This creates visible hierarchy inside a list without adding a coloured block for every notable point. Still prose, just signposted.
+
+Tier 3 &mdash; native Notion callout block (standalone, block-level, with semantic icon).
+Use when something deserves its own container because it breaks the reader's flow deliberately &mdash; a full-weight trap, a lecturer quote, a high-yield headline, a reusable reasoning pattern worth stopping for.
+- &#x26A0;&#xFE0F; (warning) &mdash; genuine traps, easy-to-miss errors, hard contraindications &rarr; red callout
+- &#x2B50; (star) &mdash; lecturer-emphasised, exam-critical &rarr; yellow callout
+- &#x1F9E0; (brain) &mdash; key distinctions, reusable reasoning patterns &rarr; blue callout
+- &#x1F4D8; (book) &mdash; top-of-file "How to use" note &rarr; grey callout
+
+CALLOUTS ARE BLOCK-LEVEL ONLY. Each callout is a standalone line that starts at column one with its semantic icon. NEVER put callout icons inside a bullet, inside a table cell, mid-paragraph, or as a highlight marker within prose. If a bullet deserves more than bold, that's Tier 2 (leading label), not a Tier 3 callout with an icon stuck on the bullet.
+
+Do NOT use the old coloured-square prefixes (&#x1F7E5;/&#x1F7E8;/&#x1F7E6;) AT ALL. Not as callout markers, not as bullet prefixes, not as emphasis inside prose. They render as ugly inline squares and defeat the design. If the content wants emphasis, use Tier 1 or Tier 2.
+
+HARD LIMITS
+- At most 2&ndash;3 Tier 3 callout blocks per major section. Fourth = delete.
+- Never two Tier 3 callouts back-to-back. Merge them or demote one to Tier 2.
+- If multiple bullets all feel "important", the chunk is too big &mdash; split the toggle rather than stacking emphasis.
+
+(6) BOLD DISCIPLINE. Bold ONLY true keywords, drug names, named signs, threshold values, or the single most important phrase in an answer. Not every medical term. Not every second word.
+
+(7) PROSE SHOULD READ LIKE A REVISION FLASHCARD, NOT LIKE A TEACHING TRANSCRIPT. Teaching-style prose ("Let's now consider..." "It's important to note that...") does not belong in the .md. The chat teaching was for you; the .md is the distilled revision artefact. Compress aggressively.
+
+BENCHMARK FOR QUALITY
+The user's previously-approved pharmacology "LECTURE 2 &mdash; Treatment" output is the density benchmark. That output has: a compact bulleted stage ladder (not a table) for the NICE algorithm, a single red skull-callout for the "never combine DPP-4 + GLP-1" contraindication, one properly-earned 4&times;4+ table for patient sub-groups where every cell carries genuinely different content, and toggles on every Q. Match that discipline. If your output is longer, flatter, or less compressed than that, go back and compress.
+
+LECTURER'S VOICE SUMMARY (required section at the top of the .md, right after the "How to use" blockquote)
+Surface the transcript-emphasis tags you collected in Prompt 1 as a short examiner-intelligence summary. Three compact bulleted lists under a single Heading 2 titled "Lecturer's voice":
+- "Flagged as exam-critical" &mdash; things the lecturer labelled as "I always ask this", "classic", "make sure you know", etc. ([EXAMINER SIGNAL] and [REPEATED] tags).
+- "De-emphasised" &mdash; things the lecturer told students not to worry about, or dismissed. Brief: name the topic and the dismissal.
+- "Spent disproportionate time on" &mdash; topics that consumed more transcript minutes than the slide weight would suggest. These are examiner tells.
+Keep each bullet to one line. Max 5 bullets per list. If no transcript was uploaded, omit the section entirely &mdash; do not fabricate lecturer quotes. This summary is the single most valuable thing a student can skim before exams; don't bury it lower in the page.
+
+PRESERVE THE ARCHETYPE STRUCTURE
+- CASCADE: pathway skeleton (code block or mermaid) at the TOP of the section, before any toggles. Toggles then drill into each step.
+- ATLAS: territory map at the top of the lecture. Identical-template cards per item. Cross-cutting patterns section. Interleaved SBA block (10&ndash;15 Qs mixed across items) at the end.
+- MECHANISM: toggles ordered by causal logic, not slide order.
+- MIXED: combine as used in teaching.
+
+FIGURE INTEGRATION &mdash; TWO PARTS
+
+(a) In the .md:
+For every figure marked TEXT in the inventory &rarr; reconstruct it inline (mermaid code block, ASCII chain, or comparison table).
+For every figure marked PDF in the inventory &rarr; insert a line reading exactly:
+    &#x1F4CE; Figure LX.Y &mdash; [caption]
+at the toggle where the figure is needed. Do not try to describe the visual inline; that's the PDF's job.
+
+(b) Extract the PDF-verdict figures as actual files.
+The rasterized slide JPEGs from Prompt 1 should be in /home/claude/. If they aren't, re-rasterize first (same libreoffice + pdftoppm commands).
+For each PDF-verdict figure in the inventory, use PIL to crop from the rasterized JPEG using the stored fractional box coordinates, resize to max 1400px width, and save as JPEG quality 90 with optimize=True:
+
+    from PIL import Image
+    def crop(src, dst, box, maxw=1400):
+        img = Image.open(src)
+        w, h = img.size
+        l,t,r,b = box
+        img = img.crop((int(l*w), int(t*h), int(r*w), int(b*h)))
+        if img.width > maxw:
+            ratio = maxw / img.width
+            img = img.resize((maxw, int(img.height*ratio)), Image.LANCZOS)
+        img.save(dst, 'JPEG', quality=90, optimize=True)
+
+Filename format: L[lecture#]_[figure#]_[slug].jpg (e.g. L3_2_substantia_nigra.jpg). Slugify the description: lowercase, underscores, no special characters.
+
+Then compile all extracted figures into a single PDF using the pdf skill, titled "Lecture [N] &mdash; Companion Figures.pdf". Each figure on its own page, with the caption written beneath. Figures ordered to match the order they appear in the .md.
+
+FORMATTING (for the .md)
+- ## H2 for each major section
+- ### Q: &hellip; for each toggle (question as title, answer nested inside)
+- Tables for all comparisons (not parallel bullet lists)
+- Code blocks for ASCII pathway diagrams and decision trees
+- &#x26A0;&#xFE0F; lines for traps/easy-to-miss details
+- &#x2B50; lines for lecturer-emphasised/high-yield
+- &#x1F9E0; lines for key distinctions/reusable patterns
+- &gt; blockquote at the very top for the "How to use" intro
+- --- between lectures only
+- &#x1F4CE; references exactly as above
+
+Include at least ONE "reusable reasoning pattern" &#x1F9E0; callout per lecture &mdash; an exam method I can transfer to unseen cases. This callout sits as a block on its own, not inside a bullet list.
+
+DELIVERABLES &mdash; STRUCTURED OUTPUT FOLDER
+
+Create a clean sub-folder structure at /mnt/user-data/outputs/[Lecture-Name]/ so everything sits together and is easy to drag into downstream tools:
+
+    /mnt/user-data/outputs/[Lecture-Name]/
+    ├── [Lecture-Name].md                  &larr; drag into Cowork for Prompt 4
+    ├── [Lecture-Name]-figures.pdf         &larr; companion PDF (optional reference)
+    ├── figures/                           &larr; drag whole folder into Cowork for Prompt 5
+    │   ├── L[N]_[M]_[slug].jpg
+    │   ├── L[N]_[M]_[slug].jpg
+    │   └&hellip;
+    └── [Lecture-Name]-figures.zip         &larr; zipped JPEGs for mobile-friendly download
+
+Use the lecture's clean name for the folder (strip "(part 1 of 2)" / "Lecture:" etc., same convention as Prompt 4). Put the individual JPEGs inside figures/ as separate files (Prompt 5 needs them separate for filename-prefix matching), AND bundle the same JPEGs into a .zip in the parent folder &mdash; the zip preserves original filenames when downloaded on mobile, where Safari iOS otherwise renames individual files to "files-1.jpg", "files-2.jpg" etc.
+
+At the end, call present_files on the folder itself (or on every file if presenting a folder isn't supported) so I can download the whole thing. Prioritise presenting in this order: .md first, figures/ folder next, zip next, PDF last.
+
+Do not explain the design principles in the output. Just embody them.</pre>
+      <button class="expand-btn">Expand &darr;</button>
+    </div>
+
+    <h3 id="rp4">Prompt 4 &mdash; Cowork render</h3>
+    <p class="section-subtitle">Paste into Claude Cowork with the <code>.md</code> attached.</p>
+    <div class="prompt-block collapsed">
+      <button class="copy-btn" data-target="rp4-text">Copy</button>
+      <pre id="rp4-text">You are rendering a Markdown file into a Notion page.
+
+STRICT RULES:
+
+1. OUTPUT
+- Use the Notion tool ONLY
+- Do NOT paste content in chat
+- One .md file = one Notion page
+- Parent page: [PASTE THE NOTION URL of the module page this lecture belongs under]
+
+2. PROCESSING
+- Confirm creation internally
+- Do NOT summarise or report counts
+- Do NOT hang &mdash; once the page is created, you are done
+
+3. STRUCTURE TRANSFORMATION
+
+Title: strip "(part 1 of 2)" / "(part 2 of 2)" / "Lecture:" / "Tutorial:" / "Lecture (GOL):" / trailing asterisks. Use the clean lecture name.
+
+Headings: ## &rarr; Heading 2. ### Q: &hellip; &rarr; toggle block (remove "Q:" prefix from title, nest all following content until next ### or ##).
+
+Tables: Markdown tables &rarr; Notion tables with headers. Code blocks &rarr; Notion code blocks, preserve monospace alignment.
+
+Callouts &mdash; convert ONLY when the emoji is at the START of a block:
+&#x26A0;&#xFE0F; &rarr; red, &#x2B50; &rarr; yellow, &#x1F9E0; &rarr; blue, &#x1F4D8; &rarr; grey.
+Use Notion's native callout block type (full-width tinted background, icon slot) &mdash; NOT a styled paragraph with the emoji inline. Emoji goes in icon slot, removed from body.
+
+Blockquote at top (&gt; &hellip;) &rarr; grey callout with &#x1F4D8;. Horizontal rule (---) &rarr; divider. &#x1F4CE; Figure references &rarr; plain text, leave as-is.
+
+4. DUPLICATES &amp; MULTI-PART LECTURES
+- If a page with the clean title already exists under the parent, APPEND this .md's content at the bottom of the existing page after a divider (---). Do not overwrite or duplicate. This is how multi-part lectures end up on one clean page.
+- On tool error &rarr; retry once, then continue.
+
+5. Preserve wording exactly. Don't summarise, rewrite, or add content.</pre>
+      <button class="expand-btn">Expand &darr;</button>
+    </div>
+
+    <h3 id="rp5">Prompt 5 &mdash; Embed figures into Notion (Cowork)</h3>
+    <p class="section-subtitle">Run in Cowork <em>after</em> Prompt 4. Same as the single-lecture version &mdash; duplicated inline so you don't need to flip tabs.</p>
+    <div class="prompt-block collapsed">
+      <button class="copy-btn" data-target="rp5-text">Copy</button>
+      <pre id="rp5-text">I have a Notion page for a lecture and a folder of labelled JPEG figures on my local machine. For every &#x1F4CE; Figure reference in the Notion page, upload the matching image as an image block immediately below that line, without removing the &#x1F4CE; reference.
+
+MATCHING RULE
+For each line in the Notion page matching the pattern "&#x1F4CE; Figure L[N].[M] &mdash; [caption]", find the JPEG in the folder whose filename starts with L[N]_[M]_ (e.g. L3_2_substantia_nigra.jpg matches &#x1F4CE; Figure L3.2). Upload that JPEG as an image block directly below the &#x1F4CE; line. Do NOT delete or modify the &#x1F4CE; line itself &mdash; it stays as a visible caption marker above the image.
+
+PLACEMENT DETAIL
+- If the &#x1F4CE; line is inside a toggle block, the image goes inside the same toggle, immediately beneath the &#x1F4CE; line.
+- If the &#x1F4CE; line is at top level, the image goes directly below it at top level.
+- Preserve all surrounding content and structure exactly.
+
+IMAGE CAPTIONS
+Use the text after the em-dash in the &#x1F4CE; line as the Notion image caption. If the platform doesn't cleanly support image captions, skip the caption &mdash; the &#x1F4CE; line above the image already carries it.
+
+ERROR HANDLING
+- If a &#x1F4CE; reference has no matching JPEG in the folder, leave the &#x1F4CE; line in place and continue &mdash; do not halt over one missing image. At the end, print a list of unmatched references.
+- If a JPEG in the folder has no matching &#x1F4CE; reference in the page, ignore it.
+- If Notion rejects an upload, retry once; if still failing, log the figure ID and continue.
+
+DELIVERABLE
+One report at the end: figures uploaded, figures unmatched, figures skipped, upload failures.
+
+Do not restructure the page. Do not add page properties, comments, or database entries. The only change is adding image blocks below existing &#x1F4CE; lines.</pre>
+      <button class="expand-btn">Expand &darr;</button>
+    </div>
+  </div>
+
+  <div class="tab-panel" data-panel="bundle" role="tabpanel">
+    <p class="tab-intro">Use when you upload 2&ndash;3 tightly linked lectures in one chat (T1DM + T2DM + diabetes complications; infertility + reproductive treatments; asthma + COPD). Produces <strong>one Notion page per lecture</strong> (never a megapage). A <em>separate</em> overview page is produced only when the lectures are genuinely integrated in how they&rsquo;re examined &mdash; e.g. when the clinical workflow of one flows directly into the next (infertility investigations &rarr; treatments), or when there&rsquo;s a named downstream lecture that depends on upstream content (diabetes complications). For bundles that merely share vocabulary or structure (T1 vs T2, asthma vs COPD), no overview page &mdash; cross-references inside each lecture page are enough, because exam SBAs still live inside each lecture&rsquo;s own TILOs. The &ldquo;Bundle shapes reference&rdquo; below gives the decision rule.</p>
+
+    <nav class="prompt-jump">
+      <a href="#bp1"><span class="num">01</span><span class="label">Audit</span></a>
+      <a href="#bp2"><span class="num">02</span><span class="label">Teach</span></a>
+      <a href="#bp3"><span class="num">03</span><span class="label">Build</span></a>
+      <a href="#bp4"><span class="num">04</span><span class="label">Render</span></a>
+      <a href="#bp5"><span class="num">05</span><span class="label">Figures</span></a>
+    </nav>
+
+    <details class="explainer">
+      <summary>Bundle shapes reference</summary>
+      <div class="explainer-body">
+        <p>Claude classifies the bundle shape in Prompt 1. The shape governs TWO things: (a) the teaching order in Prompt 2, and (b) whether a separate overview page is produced at all. The bar for an overview page is deliberately high &mdash; exam SBAs are tagged to each lecture&rsquo;s own TILOs, so the only bundles that genuinely benefit from an overview are those where the <em>clinical workflow itself</em> forces integration. When in doubt, skip the overview and rely on cross-references inside each lecture page.</p>
+        <div class="note">
+          <p class="note-title">Sequential &mdash; overview YES</p>
+          <p>Lectures form a clinical chain where the output of one is the input to the next. <em>Infertility workup &rarr; reproductive treatments.</em> A real exam stem on treatment selection requires investigation findings from the other lecture. Decision-spine overview page pays its cost.</p>
+        </div>
+        <div class="note">
+          <p class="note-title">Shared outcomes (with named downstream lecture) &mdash; overview YES</p>
+          <p>N upstream items converge on a named downstream lecture that depends on upstream content. <em>T1DM + T2DM &rarr; diabetes complications.</em> The downstream lecture IS the integration point, so a convergence page is justified.</p>
+        </div>
+        <div class="note">
+          <p class="note-title">Parallel contrast &mdash; overview NO</p>
+          <p>N items share features but are examined within their own lectures, not against each other. <em>T1DM vs T2DM; asthma vs COPD; UC vs Crohn&rsquo;s.</em> Tempting to build a comparator, but SBAs still live inside each lecture &mdash; cross-reference callouts inside each lecture page are enough. A whole comparator page adds revision overhead without adding exam yield.</p>
+        </div>
+        <div class="note">
+          <p class="note-title">Hub-and-spoke &mdash; overview NO</p>
+          <p>One core lecture + satellite deep-dives. <em>Heart failure overview + RAAS inhibitors + devices.</em> The hub lecture already carries the integration framing. Cross-references from satellites back to the hub work better than a separate map page.</p>
+        </div>
+        <div class="note">
+          <p class="note-title">Loose link &mdash; overview NO</p>
+          <p>Uploaded together but no strong structural relationship. Run each through the single-lecture workflow separately. No cross-references needed.</p>
+        </div>
+      </div>
+    </details>
+
+    <h3 id="bp1">Prompt 1 (bundle) &mdash; Audit, bundle map, figure inventory, classify</h3>
+    <div class="prompt-block collapsed">
+      <button class="copy-btn" data-target="bp1-text">Copy</button>
+      <pre id="bp1-text">Bundle: [descriptive name, e.g. "Diabetes &mdash; T1DM, T2DM, complications"]
+Lectures in this bundle:
+  L1: [name]
+  L2: [name]
+  L3: [name]
+
+Read every uploaded file for every lecture in the bundle. Then do the following in order. Do NOT start teaching yet.
+
+Step 0 &mdash; Rasterize slides (all lectures).
+For every slide file uploaded, across all lectures:
+- If not already PDF: libreoffice --headless --convert-to pdf [file] --outdir /home/claude
+- Rasterize to JPEG at 200 DPI with lecture-prefixed stems to avoid collision:
+    pdftoppm -jpeg -r 200 /home/claude/L1_[stem].pdf /home/claude/L1_[stem]
+    pdftoppm -jpeg -r 200 /home/claude/L2_[stem].pdf /home/claude/L2_[stem]
+    (etc.)
+View each JPEG individually. All figure references in later steps carry their L1_/L2_/L3_ prefix. Process lecture-by-lecture: finish L1's slides before starting L2's, to keep the audit structure clean. If the system tool-use limit fires, resume seamlessly; do NOT skip slides or batch-summarise.
+
+Step 1 &mdash; Per-lecture audit.
+One audit per lecture, clearly headed by lecture. Same format as single-lecture: every teaching point slide-by-slide, with transcript-emphasis tags where they apply:
+[EXAMINER SIGNAL] / [REPEATED] / [DE-EMPHASISED] / [TUTORIAL/TBL REINFORCED] / [CONFLICT]
+If any lecture lacks a transcript, say so for that specific lecture.
+
+Step 2 &mdash; Bundle map (tables, not prose).
+The thing that makes multi-lecture work. Produce these tables:
+
+(a) SHARED ENTITIES &mdash; concepts/investigations/drugs/findings appearing in &gt;1 lecture. Columns: entity | which lectures | angle each lecture takes.
+
+(b) CONTRASTS &mdash; dimensions where lectures cover the same territory from opposing angles. Columns: feature | Lecture A stance | Lecture B stance. Only produce if the bundle actually has contrasting items.
+
+(c) DEPENDENCIES &mdash; where one lecture assumes material from another. Columns: dependent lecture | depends on | what is assumed. Sets teaching order in Prompt 2.
+
+(d) CONVERGENCES &mdash; where multiple lectures feed into one shared downstream concept. Columns: shared outcome/concept | upstream lectures | how they combine. Use whenever multiple upstream lectures share a downstream one (e.g. T1 + T2 &rarr; complications).
+
+(e) PROPOSED CROSS-REFERENCES &mdash; per lecture, a list of cross-ref callouts to appear in its Notion page. Format: "L1 toggle '[source]' &rarr; &#x1F9E0; Compare/See/Builds-on: L2 '[target]' &mdash; [one-line reason]".
+
+Step 3 &mdash; Per-lecture figure inventory.
+One inventory table per lecture. Standard columns:
+| Slide # | Description | Verdict | Caption (if PDF) | Crop box l,t,r,b (if PDF) | Teaching point |
+Caption format: "Figure L[lecture#].[figure#] &mdash; [description]". Coords from JPEGs, not memory. Figures that appear in &gt;1 lecture: list under first appearance, cross-note in others.
+
+Step 4 &mdash; Per-lecture classification + bundle classification.
+
+(a) Classify each lecture individually (MECHANISM / CASCADE / ATLAS / MIXED), one-line justification each.
+
+(b) Classify the BUNDLE shape as one of:
+- PARALLEL CONTRAST &mdash; N items compared feature-by-feature
+- SEQUENTIAL &mdash; logical chain where later builds on earlier
+- HUB-AND-SPOKE &mdash; one core + satellite deep-dives
+- SHARED OUTCOMES &mdash; N parallel items + downstream convergence
+- LOOSE LINK &mdash; bundled only because uploaded together
+- HYBRID &mdash; name the hybrid explicitly (e.g. "parallel contrast + shared outcomes"), describe how the shapes combine
+
+Step 5 &mdash; TILOs per lecture.
+Separately for each lecture. If any lack them, say so.
+
+Wait for my next prompt before teaching.</pre>
+      <button class="expand-btn">Expand &darr;</button>
+    </div>
+
+    <h3 id="bp2">Prompt 2 (bundle) &mdash; Teach across all lectures interleaved</h3>
+    <div class="prompt-block collapsed">
+      <button class="copy-btn" data-target="bp2-text">Copy</button>
+      <pre id="bp2-text">Teach me the whole bundle now. Follow project-level rules. Teaching order and structure depend on the BUNDLE shape:
+
+IF PARALLEL CONTRAST:
+- Do not teach item 1, then item 2, then item 3. Interleave by shared dimension.
+- For each shared dimension (pathophys, epidemiology, presentation, Ix, Mx, complications, prognosis): teach every item's version side-by-side in one section, with a comparison table.
+- After each dimension: SBAs forcing discrimination ("stem fits which item?") + one recall Q per item.
+- Any application/diagnosis lecture in the bundle goes LAST, as the layer that uses the contrasted material.
+
+IF SEQUENTIAL:
+- Teach in the logical sequence from the dependencies table.
+- At each step, flag explicitly what earlier-lecture material is being used: "We established [X] in L1 &mdash; now L2 builds on it by [Y]."
+- SBAs at each step; at least one per section chains information across the lecture boundary.
+
+IF HUB-AND-SPOKE:
+- Teach the hub first using its own archetype template, as if standalone.
+- For each satellite: teach it in the context of where it plugs into the hub. "When we said [X] in the hub, here is what's really happening &mdash; [satellite detail]."
+- SBAs test both hub-standalone and satellite-integrated versions.
+
+IF SHARED OUTCOMES:
+- Teach upstream items first, using whichever shape fits the upstream set (most often parallel contrast).
+- Then teach the downstream lecture as the convergence: "Both L1 and L2 lead to [downstream concept]. Here is how the outcomes work, and where the upstream items behave identically vs differently."
+- Use the convergences table as the skeleton for the downstream section.
+- Final SBA block forces mixed discrimination: some stems resolve to upstream A, some to B, some to downstream. Interleave.
+
+IF LOOSE LINK:
+- Teach each independently. Cross-refs only where they genuinely help.
+
+IF HYBRID:
+- State the hybrid structure before teaching. Apply each sub-shape to its respective set of lectures.
+
+ACROSS ALL SHAPES:
+- Output format for in-chat teaching is PLAIN READABLE TEXT. Do NOT use HTML tags like &lt;details&gt;, &lt;summary&gt;, or any collapsible syntax in the chat response. Toggle blocks are a Notion convention that belongs ONLY in the final .mds produced in Prompt 3 &mdash; not here. In-chat Q&amp;A format: show the question, then the answer directly below it, nothing fancy.
+- Open every major section (each lecture's teaching, AND each cross-lecture section) with the single unifying intuition that makes the rest of that section derivable. The one idea a student can "own" so details snap into place instead of needing to be memorised. This is the move that turns structurally-correct teaching into teaching that clicks &mdash; don't skip it.
+- Handle [DE-EMPHASISED] items by ranking, not by isolation &mdash; keep them in the same comparison structure as the major players (same table, same axis, with a "clinical weight" column marking them Minor). Never give a de-emphasised topic its own dismissive section. Follow with a short high-yield callout that converts the de-emphasis into a recognisable exam pattern.
+- Per-lecture archetype classification still shapes each lecture's internal teaching. Bundle shape layers on top.
+- Keep each lecture identifiable throughout &mdash; when teaching L2 content, say so. Every teaching point must be attributable to a specific lecture so the final .mds separate cleanly.
+- Do not merge lectures into one undifferentiated blob. Cross-reference, do not collapse.
+- End with a TILO check PER LECTURE, not combined.
+- Teach continuously across sections within a single lecture. Between different lectures in the bundle (e.g. after finishing L1, before starting L2), a single brief pause is appropriate so I can digest one lecture before the next lands. Within a lecture, do NOT check in between subsections. If I open my message with "slow mode" or "pause between sections", pause between every chunk (the older behaviour).
+
+End with a "reusable cross-lecture pattern" summary: the discrimination, decision, or integration skill this bundle trains, transferable to unseen cases.</pre>
+      <button class="expand-btn">Expand &darr;</button>
+    </div>
+
+    <h3 id="bp3">Prompt 3 (bundle) &mdash; Build N+1 Notion pages + unified companion PDF</h3>
+    <div class="prompt-block collapsed">
+      <button class="copy-btn" data-target="bp3-text">Copy</button>
+      <pre id="bp3-text">Now build the Notion-ready outputs for this bundle AND produce the companion figures.
+
+Apply the APPLIED DESIGN PRINCIPLES from the project instructions throughout. The rules below are non-negotiable &mdash; not guidance to apply where convenient. Apply to every .md in the bundle.
+
+NON-NEGOTIABLE DESIGN RULES
+(1) EVERY question is inside a Notion toggle. "### Q: [question]" becomes a toggle block; the answer is hidden inside. Answers visible in plain text below a Q destroy active recall and fail the brief.
+(2) CHUNK SIZE CEILING. Every toggle answer is at most 6 short bullets OR 3 short sentences OR one compact list/ladder. If you cannot compress, split the question.
+(3) TABLE GATE. Before writing a table: 3 columns minimum, 3 rows minimum, of genuinely differentiated content. No 4-column tables holding arrows. No 2-column lists pretending to be tables. When a table fails the gate, convert to a bulleted ladder, a short prose answer, or a nested list.
+(4) MAX TABLE DIMENSIONS 4 cols &times; 4 rows. If bigger, split.
+(5) CALLOUT DISCIPLINE. Three-tier emphasis: **bold** for in-sentence keywords (default), "**Key/Trap/Pattern:** ..." leading labels for important-among-peers bullets (middle tier), native Notion callout blocks with semantic icons only for content that earns its own container (&#x26A0;&#xFE0F; red traps, &#x2B50; yellow high-yield, &#x1F9E0; blue reasoning pattern, &#x1F4D8; grey how-to-use). Callouts are BLOCK-LEVEL only &mdash; never inside a bullet or mid-paragraph. Coloured-square prefixes (&#x1F7E5;/&#x1F7E8;/&#x1F7E6;) are never used, not anywhere. Max 2&ndash;3 callout blocks per major section; never two back-to-back.
+(6) BOLD DISCIPLINE. True keywords, drug names, named signs, thresholds, or the single most important phrase only.
+(7) .MD &ne; TEACHING TRANSCRIPT. Compress aggressively. Flashcard-density, not lecture-prose.
+
+Benchmark: match the user's previously-approved pharmacology "LECTURE 2 &mdash; Treatment" output &mdash; compact bulleted ladders, sparse callouts, tables only where genuinely earned, toggles on every Q.
+
+LECTURER'S VOICE SUMMARY (required section at the top of EACH lecture's .md)
+Surface the transcript-emphasis tags from Prompt 1 as a short examiner-intelligence summary under a Heading 2 titled "Lecturer's voice". Three compact bulleted lists: flagged-as-exam-critical / de-emphasised / spent-disproportionate-time-on. One line per bullet, max 5 bullets per list. Omit entirely for any lecture that had no transcript &mdash; do not fabricate. This is the single most valuable pre-exam skim.
+
+DELIVERABLES
+
+(1) One .md file PER LECTURE. Primary pages. Each .md self-contained. Archetype structure per lecture follows per-lecture classification from Prompt 1.
+
+(2) One bundle overview .md &mdash; ONLY produce if the lectures are genuinely examined as integrated material, not just because they share vocabulary or themes.
+
+Exam reality: SBA questions are tagged to the TILOs of a single lecture. Integration across lectures is examined only when the clinical workflow itself forces the integration (e.g. infertility investigations flow directly into reproductive treatments &mdash; a real exam stem on treatment selection will require you to know the investigation findings from the other lecture). In that case, an overview page pays its cognitive cost because it matches how the material is tested. When lectures merely share structure or concepts (e.g. T1DM and T2DM both have complications; heart failure and COPD both present with dyspnoea), SBAs still live inside each individual lecture's content &mdash; an overview page would add revision overhead without adding exam yield.
+
+DECISION RULE for producing the overview page:
+- YES produce an overview ONLY if: the clinical pathway forces the lectures into sequence/dependence (SEQUENTIAL), or the curriculum actually converges them into a downstream lecture where the earlier material is the foundation (SHARED OUTCOMES with a clearly-named downstream lecture that depends on upstream content).
+- NO overview page if: the bundle is just thematic similarity (PARALLEL CONTRAST of diseases that share features), a hub-and-spoke organisation (HUB-AND-SPOKE), or anything LOOSE LINK. In these cases, produce only the individual lecture pages + cross-references (see (3) below). The cross-references alone are enough; the integration overhead doesn't justify a whole page.
+
+When in doubt, skip the overview. A focused lecture page beats a thin comparator.
+
+If producing an overview: content varies by shape.
+- SEQUENTIAL &rarr; decision-spine page: end-to-end clinical logic across the lectures, cross-linking into each lecture page for detail. Examples: workup &rarr; treatment decision pathways; diagnostic algorithm &rarr; staging &rarr; management.
+- SHARED OUTCOMES &rarr; convergence page: short intro to upstream items, then shared downstream content integrated, with cross-links back to upstream pages. Only make this page if there's a named downstream lecture (e.g. "diabetes complications" downstream of T1DM + T2DM).
+
+Title format: "Bundle &mdash; [name]" (e.g. "Bundle &mdash; Infertility workup &amp; treatment").
+
+(3) Cross-references inside every lecture page.
+Each lecture .md contains &#x1F9E0; callout blocks at points where another lecture becomes relevant (NOT inside bullet lists &mdash; these are standalone block-level callouts):
+    ### Q: [integration-style question]
+    [short answer, ending with "See also: L[N] &mdash; [toggle title]"]
+Use the proposed cross-references from Prompt 1 Step 2(e) as the base list. Add more if teaching surfaced them.
+
+(4) One unified companion PDF for the whole bundle.
+Use the cropping pipeline: PIL, quality 90, max 1400px, fractional coords from inventory. Filename: L[lecture#]_[figure#]_[slug].jpg.
+Compile with the pdf skill into "Bundle &mdash; [name] &mdash; Companion Figures.pdf", grouped by lecture (all L1 figures first, then L2, etc.), one figure per page, captions exactly matching the .mds. One PDF for the bundle, not N PDFs.
+
+ARCHETYPE REMINDERS (within each lecture's .md)
+- CASCADE: pathway skeleton at top of section before toggles.
+- ATLAS: territory map, identical-template cards, cross-cutting patterns, interleaved SBA block.
+- MECHANISM: toggles ordered by causal logic.
+- MIXED: combine as used in teaching.
+
+CROSS-LECTURE SBAs
+Overview page carries a large interleaved SBA block forcing cross-lecture discrimination. Highest-yield for exam application &mdash; never skip for non-LOOSE-LINK bundles.
+
+FORMATTING
+Standard Notion markdown rules from design principles apply to every .md.
+
+Output each .md as a separate labelled code block:
+    === L1: [name].md ===
+    [content]
+    === L2: [name].md ===
+    [content]
+    === Bundle overview &mdash; [name].md ===
+    [content]
+
+DELIVERABLES &mdash; STRUCTURED OUTPUT FOLDER
+
+Create a clean sub-folder per lecture at /mnt/user-data/outputs/[Bundle-Name]/ so files group cleanly:
+
+    /mnt/user-data/outputs/[Bundle-Name]/
+    ├── L1-[Lecture-Name]/
+    │   ├── L1-[Lecture-Name].md
+    │   └── figures/
+    │       ├── L1_1_[slug].jpg
+    │       └&hellip;
+    ├── L2-[Lecture-Name]/
+    │   ├── L2-[Lecture-Name].md
+    │   └── figures/
+    │       └&hellip;
+    ├── Bundle-overview.md   (if produced per the decision rule above)
+    ├── [Bundle-Name]-figures.pdf          &larr; unified companion PDF across all lectures
+    └── [Bundle-Name]-figures.zip          &larr; all JPEGs zipped (preserves filenames for mobile download)
+
+Individual JPEGs sit inside each lecture's figures/ folder as separate files (Prompt 5 needs them separate for filename-prefix matching). The top-level zip bundles them all together so downloading on mobile preserves filenames. Call present_files on the bundle folder (or on each major file if presenting a folder isn't supported) at the end.</pre>
+      <button class="expand-btn">Expand &darr;</button>
+    </div>
+
+    <h3 id="bp4">Prompt 4 (bundle) &mdash; Cowork render</h3>
+    <p class="section-subtitle">Paste into Claude Cowork with all <code>.md</code> files attached.</p>
+    <div class="prompt-block collapsed">
+      <button class="copy-btn" data-target="bp4-text">Copy</button>
+      <pre id="bp4-text">You are rendering multiple Markdown files into linked Notion pages for a bundle of lectures.
+
+STRICT RULES:
+
+1. OUTPUT
+- Use the Notion tool ONLY
+- Do NOT paste content in chat
+- One .md file = one Notion page. Do NOT merge.
+- Parent page: [PASTE THE NOTION URL of the module page this bundle belongs under]
+
+2. PROCESSING
+- Process files ONE AT A TIME (sequentially), not in parallel
+- Confirm creation internally
+- Do NOT summarise or report counts
+- Do NOT hang &mdash; once a page is created, move to the next
+
+3. STRUCTURE TRANSFORMATION (applies to every .md in the bundle)
+
+Title: strip "(part 1 of 2)" / "(part 2 of 2)" / "Lecture:" / "Tutorial:" / "Lecture (GOL):" / trailing asterisks. Use the clean lecture name.
+
+Headings: ## &rarr; Heading 2. ### Q: &hellip; &rarr; toggle block (remove "Q:" prefix from title, nest all following content until next ### or ##).
+
+Tables: Markdown tables &rarr; Notion tables with headers. Code blocks &rarr; Notion code blocks, preserve monospace alignment for ASCII diagrams.
+
+Callouts &mdash; convert ONLY when the emoji is at the START of a block:
+&#x26A0;&#xFE0F; &rarr; red, &#x2B50; &rarr; yellow, &#x1F9E0; &rarr; blue, &#x1F4D8; &rarr; grey.
+Use Notion's native callout block type (full-width tinted background, icon slot) &mdash; NOT a styled paragraph with the emoji inline. Emoji goes in icon slot, removed from body.
+
+Blockquote at top (&gt; &hellip;) &rarr; grey callout with &#x1F4D8;. Horizontal rule (---) &rarr; divider. &#x1F4CE; Figure references &rarr; plain text, leave as-is.
+
+4. BUNDLE-SPECIFIC
+- Each .md = one page. If you have 3 lecture .mds, create 3 pages. If an overview .md exists, create that as a 4th page under the same parent.
+- "See also: L[N] &mdash; [toggle title]" lines render as Notion page links pointing at the corresponding lecture page in this bundle. If exact-toggle linking isn't available, link to the parent page of that lecture.
+
+5. DUPLICATES &amp; MULTI-PART LECTURES
+- If a page with the clean title already exists under the parent, APPEND this .md's content at the bottom of the existing page after a divider (---). Do not overwrite or duplicate.
+- On tool error &rarr; retry once, then continue.
+
+6. Preserve wording exactly. Don't summarise, rewrite, or add content.</pre>
+
+      <button class="expand-btn">Expand &darr;</button>
+    </div>
+
+    <h3 id="bp5">Prompt 5 (bundle) &mdash; Embed figures into all Notion pages (Cowork)</h3>
+    <p class="section-subtitle">Run in Cowork <em>after</em> Prompt 4 has created all the Notion pages for the bundle. Point Cowork at the folder of labelled JPEGs (covers all lectures in the bundle).</p>
+    <div class="prompt-block collapsed">
+      <button class="copy-btn" data-target="bp5-text">Copy</button>
+      <pre id="bp5-text">I have a bundle of linked Notion pages (one per lecture, plus an overview page) and a folder of labelled JPEG figures covering all lectures in the bundle. For every &#x1F4CE; Figure reference across ALL pages in the bundle, upload the matching image as an image block immediately below that line, without removing the &#x1F4CE; reference.
+
+MATCHING RULE
+Process every page in the bundle. For each line matching "&#x1F4CE; Figure L[N].[M] &mdash; [caption]", find the JPEG in the folder whose filename starts with L[N]_[M]_ (lecture-prefixed, e.g. L2_3_insulin_resistance.jpg matches &#x1F4CE; Figure L2.3). Upload that JPEG as an image block directly below the &#x1F4CE; line. Do NOT delete or modify the &#x1F4CE; line itself.
+
+SCOPE
+- Process all lecture pages AND the overview page. The overview may cross-reference figures from multiple lectures &mdash; upload whichever matches by L[N]_[M] prefix.
+- A single JPEG may legitimately be referenced from more than one page (e.g. a shared pathophysiology diagram referenced from both an upstream lecture and the convergence page). Upload it to each page where the &#x1F4CE; reference appears.
+
+PLACEMENT DETAIL
+- If the &#x1F4CE; line is inside a toggle block, the image goes inside the same toggle, directly below the &#x1F4CE; line.
+- If the &#x1F4CE; line is at top level, the image goes directly below it at top level.
+- Preserve all surrounding content and structure exactly.
+
+IMAGE CAPTIONS
+Use the text after the em-dash in the &#x1F4CE; line as the Notion image caption. If the platform doesn't cleanly support image captions, skip &mdash; the &#x1F4CE; line already carries the caption.
+
+ERROR HANDLING
+- If a &#x1F4CE; reference has no matching JPEG, leave the &#x1F4CE; line in place and continue. Log the unmatched ID for the final report.
+- If a JPEG has no matching &#x1F4CE; reference anywhere in the bundle, ignore it.
+- Notion upload rejections: retry once, then log and continue.
+
+DELIVERABLE
+One report at the end, organised by page:
+- For each page in the bundle: figures uploaded / unmatched / failed
+- Orphan JPEGs (no &#x1F4CE; anywhere in bundle)
+
+Do not restructure any page. Do not add page properties, comments, or database entries. The only change is adding image blocks below existing &#x1F4CE; lines.</pre>
+      <button class="expand-btn">Expand &darr;</button>
+    </div>
+  </div>
+
+  <div class="ornament">&middot; &middot; &middot;</div>
+
+  <h2 id="diagnostic">Diagnostic</h2>
+  <p class="section-subtitle">Single-message prompts for repairing or intervening on existing artefacts. Not full workflows &mdash; each is a drop-in you paste into a fresh chat when something specific needs fixing or when a revision page needs to respond to your practice.</p>
+
+  <h3 id="fix-up">Fix-up &mdash; rebuild an old <code>.md</code> to the current quality bar</h3>
+  <p class="section-subtitle">Use when an existing <code>.md</code> has open Q&rarr;A pairs instead of toggles, oversized tables, <code>&lt;details&gt;</code>/<code>&lt;summary&gt;</code> HTML leftovers, decorative callouts, or is missing the Lecturer&rsquo;s Voice summary. Does structural rebuild only &mdash; doesn&rsquo;t re-teach. Works in two ways: (1) attach a standalone old <code>.md</code> to a fresh chat (in the relevant module Project so Parts A and B load), OR (2) run it inside the chat that produced the <code>.md</code> originally &mdash; Claude reads from its own prior message. Also regenerates individual JPEGs if the original chat predated the JPEG-delivery rule (which is likely the case for old chats). Then re-run Prompt 4 on the rebuilt <code>.md</code>. Not the right tool if the underlying <em>teaching</em> was wrong &mdash; re-teach from scratch with Prompts 1&rarr;3 in that case.</p>
+  <div class="prompt-block collapsed">
+    <button class="copy-btn" data-target="fixup-text">Copy</button>
+    <pre id="fixup-text">I want you to rebuild an existing .md to my current design standards. Don't re-teach &mdash; the substance is fine. Use ONLY what's already been produced. Do not invent new teaching points.
+
+SOURCE OF THE OLD .md
+I may supply it in one of two ways:
+(a) Attached as a .md file to this message &mdash; if so, use that.
+(b) NOT attached, because it was produced earlier in this very chat as a code-block output from a previous Prompt 3 run &mdash; in that case, read it from your own prior message and rebuild from there. I'll tell you which one ("the L1 one", "the bundle overview", "all three", etc.). Do not ask me to re-attach if it's already in the chat history; just find it and proceed.
+
+Apply every non-negotiable rule from my current Prompt 3:
+
+(1) EVERY question is inside a Notion toggle. Convert every ### Q: whose answer is currently sitting as plain text below it into a proper toggle structure. If the file contains &lt;details&gt; or &lt;summary&gt; HTML tags anywhere, strip them.
+
+(2) CHUNK CEILING. Any toggle answer exceeding 6 short bullets OR 3 short sentences OR one compact list/ladder gets split into multiple smaller Qs. Do not inflate toggles.
+
+(3) TABLE GATE. Any table with fewer than 3 columns AND 3 rows of genuinely differentiated content gets converted to a compact bulleted ladder or short prose. No tables where most cells hold symbols, arrows, or near-identical content. Max dimensions 4&times;4.
+
+(4) EMPHASIS LADDER. Apply the three-tier emphasis discipline. Tier 1: **bold** for keywords inside sentences. Tier 2: "**Key:** ...", "**Trap:** ...", "**Pattern:** ..." leading labels for important-among-peers bullets. Tier 3: native Notion callout blocks with semantic icons (&#x26A0;&#xFE0F; red traps, &#x2B50; yellow high-yield, &#x1F9E0; blue reasoning, &#x1F4D8; grey how-to-use), standalone block-level only.
+
+Structural fixes to apply:
+- If the file has callouts prefixed with &#x1F7E5;/&#x1F7E8;/&#x1F7E6; (old convention) as standalone lines, convert to the corresponding semantic icon (&#x26A0;&#xFE0F;/&#x2B50;/&#x1F9E0;) at column one.
+- If the file has coloured-square emojis INSIDE bullets, tables, or mid-paragraph (e.g. "- &#x1F7E8; It takes years &rarr; surveillance works"), STRIP the square entirely. Reassess what tier the content deserves: if the bullet is genuinely the key one in its list, convert to Tier 2 leading-label format ("- **Key:** It takes years &rarr; **surveillance works**"); otherwise leave as plain bullet with bold on the critical phrase.
+- If multiple consecutive paragraphs each start with a callout icon (wallpaper pattern), DEMOTE all but the most important one back to prose or Tier 2 labels. Keep at most 2&ndash;3 Tier 3 callouts per major section; never two back-to-back.
+
+Remove decorative callouts.
+
+(5) BOLD DISCIPLINE. Bold only keywords, drug names, named signs, thresholds, or the single most important phrase in an answer. Strip bold from every medical term that isn't load-bearing.
+
+(6) .MD &ne; TEACHING TRANSCRIPT. Strip phrases like "Let's now consider&hellip;", "It's important to note that&hellip;", discursive connective tissue. The .md is a compressed flashcard document, not a lecture recording.
+
+(7) LECTURER'S VOICE SUMMARY at the top. If the old .md has no section titled "Lecturer's voice" right after the "How to use" blockquote, add one &mdash; three short bulleted lists (Flagged as exam-critical / De-emphasised / Spent disproportionate time on), derived from any transcript-emphasis tags or examiner-signal language already present in the file OR in your earlier audit from this chat. If there's no transcript evidence available at all, skip the section &mdash; do not fabricate.
+
+ALSO: INDIVIDUAL CROPPED JPEGs (if this chat predated the JPEG-delivery rule)
+This fix-up may apply to an old chat that produced only the .md and the companion PDF &mdash; without surfacing individual cropped JPEGs. If so, re-run the crop() pass NOW using the figure inventory and crop coordinates from this chat's Prompt 1 output, and present EVERY individual JPEG to me via present_files, named L[lecture#]_[figure#]_[slug].jpg. I need these files because Prompt 5 matches them to &#x1F4CE; Figure references in the Notion page by filename prefix &mdash; the PDF alone is not enough. Do NOT re-run the audit, do NOT re-run the teaching &mdash; only the crop() pass and present_files call. If the lecture's crop coordinates aren't in context anymore, tell me and I'll re-run Prompt 1 separately; don't fabricate coordinates.
+
+BENCHMARK
+Match the density of the pharmacology "LECTURE 2 &mdash; Treatment" output: compact bulleted ladders, sparse callouts, tables only where genuinely earned, toggles on every Q, crisp prose.
+
+OUTPUT (IMPORTANT &mdash; read carefully)
+Surface the rebuilt .md as a DOWNLOADABLE FILE via the present_files tool. Do NOT paste the full .md inline as a code block in your chat reply &mdash; I'm on mobile and can't easily extract a multi-page code block from the chat UI. I need the actual file object I can tap to download.
+
+Concretely:
+1. Write the rebuilt .md to /mnt/user-data/outputs/[lecture-name].md
+2. Call present_files on that path.
+3. Also use present_files for every individual cropped JPEG (L[N]_[M]_[slug].jpg), IF this chat hadn't already delivered them.
+4. Also use present_files for the companion PDF IF it wasn't already delivered (skip if it was).
+5. Then (and only then) write a short "what changed" summary inline in your reply:
+   - Toggles added: count
+   - Q's split: count
+   - Tables converted/removed: count
+   - Callouts removed as decorative: count
+   - Bold strippings: rough count
+   - HTML tags removed: count
+   - Lecturer's voice section: added / already present / skipped (no transcript data)
+   - JPEGs regenerated: count (or "not needed, already delivered")
+
+Do not change any factual content. This is a structural rebuild + missing-assets pass, not a re-teach.</pre>
+    <button class="expand-btn">Expand &darr;</button>
+  </div>
+
+  <h3 id="gap-remediation">Gap remediation &mdash; targeted re-teach of Qs you couldn&rsquo;t answer</h3>
+  <p class="section-subtitle">Use after you&rsquo;ve practised the Notion page and identified specific toggles you couldn&rsquo;t answer. Paste back into the same chat (or a fresh chat with the <code>.md</code> attached), replacing the placeholder with your list of failed Qs. Turns the static revision page into a responsive tutor focused on your actual gaps &mdash; higher yield than re-reading the whole page for the third time.</p>
+  <div class="prompt-block collapsed">
+    <button class="copy-btn" data-target="gap-text">Copy</button>
+    <pre id="gap-text">Here are the toggles I couldn't answer:
+
+[paste the Q texts here, one per line]
+
+For each, re-teach it from a different angle than the original .md took. Start with a unifying intuition I might have missed, then give me one realistic SBA with full reasoning for correct and tempting-but-wrong options. Don't re-teach anything else &mdash; only these.</pre>
+    <button class="expand-btn">Expand &darr;</button>
+  </div>
+
+  <h3 id="audit-page">Audit &mdash; spot-check a rendered Notion page for silent errors</h3>
+  <p class="section-subtitle">Use when a rendered page looks off but you can't tell exactly what. Cowork opens the page, walks through it, and reports anomalies: empty toggles, callouts that rendered as styled paragraphs, missing figures, tables that look broken. Run this <em>after</em> Prompt 4 (and ideally after Prompt 5 too, if you're checking figures). It&rsquo;s a spot-check tool &mdash; not something to run every time. Useful when something feels wrong, or once per module as a sanity pass on the worst-looking pages.</p>
+  <div class="prompt-block collapsed">
+    <button class="copy-btn" data-target="audit-text">Copy</button>
+    <pre id="audit-text">Audit the Notion page at this URL for render-quality issues. Read the page using the Notion tool, then report anomalies in a short structured list.
+
+Page: [PASTE NOTION PAGE URL]
+
+CHECKS TO RUN
+
+(1) Toggle integrity
+- Count all toggle blocks on the page.
+- For each, check: does the toggle have content nested inside it? Flag any EMPTY toggles (title but no body).
+- Flag any "### Q: ..." headings that appear as plain text rather than toggle blocks (i.e. conversion didn't fire).
+
+(2) Callout integrity
+- Count callouts by colour (red/yellow/blue/grey) and report the totals.
+- Flag any line that STARTS with &#x26A0;&#xFE0F; / &#x2B50; / &#x1F9E0; / &#x1F4D8; but is rendered as a normal paragraph (not a callout block). This is the "lazy render" failure &mdash; the block should have been a callout but got rendered as styled text.
+- Flag any callout where the triggering icon is still visible in the body text (should have been removed when moved to the icon slot).
+
+(3) Figure integrity (only if the page was rendered after Prompt 5)
+- Count &#x1F4CE; Figure references in the page.
+- For each one, check whether an image block sits directly below it. Flag any &#x1F4CE; reference with no image under it (Prompt 5 didn't match, or upload failed).
+- Report any orphan image blocks (image not preceded by a &#x1F4CE; line).
+
+(4) Table sanity
+- Count tables. For each, report rows &times; columns.
+- Flag any table with fewer than 3 columns OR fewer than 3 rows of content (likely should have been a bulleted list in the .md; may look awkward).
+
+(5) Code block preservation
+- For any code block on the page, check whether the monospace alignment is preserved. Flag any code block where line breaks or indentation look mangled (particularly important for ASCII cascade diagrams).
+
+(6) Structural basics
+- Is there a "Lecturer's voice" section near the top? Flag if absent.
+- Is there a top-of-page "How to use" grey callout? Flag if absent.
+- Any duplicate consecutive dividers, empty headings, or orphaned list items?
+
+OUTPUT
+A compact report:
+- Counts: toggles / callouts by colour / tables / figures / code blocks / dividers
+- Anomalies: bulleted list grouped by category (empty toggles / lazy callouts / missing figures / bad tables / broken code blocks / structural gaps)
+- Overall: "clean", "minor issues", or "needs attention" based on severity
+
+Do NOT modify the page. This is read-only. I'll decide what to fix.</pre>
+    <button class="expand-btn">Expand &darr;</button>
+  </div>
+
+  <h3 id="batch-figures">Batch figure embed &mdash; embed figures across many Notion pages at once</h3>
+  <p class="section-subtitle">Use when you have one folder of labelled JPEGs covering many lectures (e.g. a whole module) and you want Cowork to embed figures across every page under a parent, rather than running Prompt 5 once per lecture. Filename-prefix matching handles the routing: <code>L3_2_substantia_nigra.jpg</code> goes under <code>&#x1F4CE; Figure L3.2</code> on whichever page has that reference. One invocation, walks every subpage, reports unmatched at the end.</p>
+  <div class="prompt-block collapsed">
+    <button class="copy-btn" data-target="batch-figures-text">Copy</button>
+    <pre id="batch-figures-text">I'm giving you a single folder containing labelled JPEG figures for multiple lectures. Every filename follows the pattern L[N]_[M]_[slug].jpg where N is the lecture number prefix and M is the figure number. Process every page in this Notion parent and embed figures where they match.
+
+Parent: [PASTE NOTION URL &mdash; e.g. the Endocrinology module page]
+JPEG folder: [PASTE LOCAL PATH]
+
+PROCESSING
+- Walk every subpage under the parent (one per lecture).
+- For each page, find every line matching "&#x1F4CE; Figure L[N].[M] &mdash; [caption]".
+- For each reference, find the JPEG in the folder whose filename starts with L[N]_[M]_ (e.g. L3_2_substantia_nigra.jpg matches &#x1F4CE; Figure L3.2).
+- Upload that JPEG as an image block directly below the &#x1F4CE; line.
+- Leave the &#x1F4CE; line itself unchanged &mdash; it stays as a caption marker.
+
+ONE AT A TIME
+- Process pages sequentially, not in parallel.
+- Confirm each upload internally; don't report per-page.
+- Don't hang &mdash; once an image uploads, move to the next.
+
+IDEMPOTENT
+- If running on a partially-done page, skip references that already have an image block directly below them. Don't re-upload.
+- Same logic across re-runs &mdash; this prompt should be safe to run twice without creating duplicates.
+
+DO NOT
+- Create new pages.
+- Modify any block other than adding images under &#x1F4CE; lines.
+- Upload a JPEG that has no matching &#x1F4CE; reference anywhere under the parent.
+
+REPORT AT THE END ONLY
+- Pages processed: count
+- Images uploaded successfully: count
+- &#x1F4CE; references with no matching JPEG: list (by page, by reference)
+- JPEGs in the folder with no matching &#x1F4CE; anywhere: list
+- Upload failures: list with reason
+
+Do not summarise any page content. This is a routing + upload job, not a content audit.</pre>
+    <button class="expand-btn">Expand &darr;</button>
+  </div>
+
+  <div class="ornament">&middot; &middot; &middot;</div>
+
+  <h2 id="notes">Field notes</h2>
+
+  <details class="fieldnote">
+    <summary>How figures actually flow through the system</summary>
+    <div class="fieldnote-body">
+    <p>Claude produces the figures for you &mdash; no manual screenshotting. The pipeline runs across two prompts:</p>
+    <p><strong>Prompt 1</strong> &rarr; Claude rasterizes every slide to a JPEG at 200 DPI using <code>libreoffice</code> + <code>pdftoppm</code>, then <em>views</em> each image. This sharpens the audit (text baked into images, yellow callouts, and layout cues get captured properly) and produces the figure inventory, which includes fractional crop-box coordinates for every PDF-verdict figure.<br><strong>Prompt 3</strong> &rarr; Claude uses those crop coordinates to extract each figure (PIL, quality 90, max 1400px), then compiles them into a <em>Lecture X &mdash; Companion Figures.pdf</em> via the pdf skill. You get the <code>.md</code> and the PDF as final deliverables, ready to use.</p>
+    <p>Your job is just to sanity-check the figure inventory in Prompt 1 &mdash; if Claude flagged something as SKIP that you wanted in the PDF (or vice versa), say so before moving to Prompt 2.</p>
+    </div>
+  </details>
+
+  <details class="fieldnote">
+    <summary>Parameters worth knowing</summary>
+    <div class="fieldnote-body">
+    <p>200 DPI rasterization keeps small figure labels legible when Claude views each slide for triage, which makes the inventory more accurate. JPEG quality 90 + <code>optimize=True</code> is essentially lossless for slide content and handles text-heavy figures without visible compression artifacts. Max width 1400px gives complex pathway and histology labels room to stay crisp when zoomed. Fractional crop coordinates (rather than absolute pixels) survive re-rendering at any resolution. A lecture's ~15 figures at these settings totals 3&ndash;5 MB for the companion PDF &mdash; trivial. Don't lower these unless you have a reason.</p>
+    </div>
+  </details>
+
+  <details class="fieldnote">
+    <summary>When you disagree with the classification</summary>
+    <div class="fieldnote-body">
+    <p>Override it in Prompt 2. Claude's classification is a draft &mdash; you've been through the material. If it says MECHANISM but your gut says MIXED, write <em>"Override: treat this as MIXED with atlas cards for [X], [Y], [Z]"</em> at the top of Prompt 2.</p>
+    </div>
+  </details>
+
+  <details class="fieldnote">
+    <summary>Mid-teaching corrections</summary>
+    <div class="fieldnote-body">
+    <p>If Claude drifts back into slide order, say: <em>"Stop. You're teaching in slide order again. Restart the last section using [archetype] structure."</em> The archetype prompt is your leverage.</p>
+    </div>
+  </details>
+
+  <details class="fieldnote">
+    <summary>Length discipline</summary>
+    <div class="fieldnote-body">
+    <p>If a teaching section runs past ~6 paragraphs of prose without a table, code block, or test, push back: <em>"Too discursive. Compress into a table or split into cards."</em> The same applies to the final <code>.md</code> &mdash; if a toggle runs past 8 bullets or 12 lines, it must be split.</p>
+    </div>
+  </details>
+
+  <details class="fieldnote">
+    <summary>Interleaved SBAs are the anti-mush tool</summary>
+    <div class="fieldnote-body">
+    <p>Blocked practice (all colon Qs, then all pancreas Qs) feels fluent and doesn't transfer. Interleaved practice (colon, pancreas, liver, colon, gallbladder &mdash; mixed) feels harder and transfers. For any atlas or mixed lecture, never skip the interleaved SBA block at the end.</p>
+    </div>
+  </details>
+
+  <details class="fieldnote">
+    <summary>Prompt 5: figures in the Notion page itself</summary>
+    <div class="fieldnote-body">
+    <p>Prompt 5 is optional but worth running. After Cowork has built the Notion page (Prompt 4), Prompt 5 walks through every <code>&#x1F4CE; Figure LX.Y</code> reference in the page and uploads the matching JPEG as an image block directly below it, keeping the <code>&#x1F4CE;</code> reference as a visible caption. Match is by filename prefix &mdash; <code>L3_2_substantia_nigra.jpg</code> slots under <code>&#x1F4CE; Figure L3.2</code>. The companion PDF from Prompt 3 still exists as a fallback in case an upload fails, and as a printable reference for offline revision. You can also run Prompt 5 later &mdash; the filename convention and the <code>&#x1F4CE;</code> references mean the matching still works hours or days after the original chat closes.</p>
+    </div>
+  </details>
+
+  <details class="fieldnote">
+    <summary>Prompt 4 is deliberately minimal &mdash; and that's load-bearing</summary>
+    <div class="fieldnote-body">
+    <p>Prompt 4 was redesigned after a bundle render cost ~80% of a week's usage. The new version follows four principles that keep Cowork cheap: (1) you paste the parent page URL &mdash; Cowork doesn't walk the hierarchy; (2) no pre-flight counts or reports &mdash; the render is the confirmation; (3) "do not hang" &mdash; when a page is created, done, move on; (4) process files sequentially, not in parallel. For multi-part lectures, the clean-title logic + append-on-duplicate means part 1 and part 2 merge onto one page automatically. The callout trigger is now the semantic icon (&#x26A0;&#xFE0F; / &#x2B50; / &#x1F9E0; / &#x1F4D8;) rather than the coloured square (&#x1F7E5; / &#x1F7E8; / &#x1F7E6;) to remove a translation step. Don't re-add hierarchy walking, pre-flight reports, or routing tables without a strong reason &mdash; those were what made the render expensive.</p>
+    </div>
+  </details>
+
+  <details class="fieldnote">
+    <summary>Overview pages are the exception, not the rule</summary>
+    <div class="fieldnote-body">
+    <p>A bundle doesn&rsquo;t automatically earn an overview page. Exam SBAs are tagged to individual lectures&rsquo; TILOs, so integration is only examined when the <em>clinical workflow itself</em> forces it &mdash; e.g. infertility investigations flowing into reproductive treatments, or diabetes lectures converging on a named complications lecture. For bundles that are just thematic similarity (T1 vs T2; asthma vs COPD; UC vs Crohn&rsquo;s), the individual lecture pages plus cross-reference callouts inside each are sufficient. A whole overview page in those cases adds revision overhead without adding exam yield. Default: no overview. Exception: genuine clinical-workflow integration or named downstream convergence.</p>
+    </div>
+  </details>
+
+  <details class="fieldnote">
+    <summary>Continuous teaching vs. slow mode</summary>
+    <div class="fieldnote-body">
+    <p>Claude now teaches continuously by default &mdash; no "shall I continue?" pauses between sections of a single lecture. The system-level tool-use limit (Claude.ai's "Continue" button) will still sometimes interrupt very long outputs; just tap Continue and Claude resumes. For bundle mode, there's one brief pause between lectures so you can digest one before the next lands, but no pauses within a lecture. If you want the older behaviour where Claude stops after every chunk, open Prompt 2 with <strong>&ldquo;slow mode&rdquo;</strong> or <strong>&ldquo;pause between sections&rdquo;</strong>.</p>
+    </div>
+  </details>
+
+  <details class="fieldnote">
+    <summary>Review schedule</summary>
+    <div class="fieldnote-body">
+    <p>Day 1, Day 3, Day 7, Day 21, then monthly. Spacing plus the retrieval built into the toggle format is what converts a good page into durable memory. The page itself won't do that work for you if it just sits there.</p>
+    </div>
+  </details>
+
+</div>
+
+<script>
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const target = document.getElementById(btn.dataset.target);
+      if (!target) return;
+      const text = target.textContent;
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (e) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); } catch (err) {}
+        document.body.removeChild(ta);
+      }
+      const original = btn.textContent;
+      btn.textContent = 'Copied';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.classList.remove('copied');
+      }, 1400);
+    });
+  });
+
+  document.querySelectorAll('.expand-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const block = btn.closest('.prompt-block');
+      const wasCollapsed = block.classList.contains('collapsed');
+      block.classList.toggle('collapsed');
+      btn.innerHTML = wasCollapsed ? 'Collapse &uarr;' : 'Expand &darr;';
+    });
+  });
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.tab;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === target));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.dataset.panel === target));
+      // scroll panel into view gently on mobile switches
+      const panel = document.querySelector(`.tab-panel[data-panel="${target}"]`);
+      if (panel && window.innerWidth < 560) {
+        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  // Sticky tab nav scoped to Workflow section.
+  // The tab nav re-pins below the page jump nav while the user is scrolled
+  // inside the Workflow section, and unpins above/below it. Uses scroll
+  // position rather than IntersectionObserver because nested stickies are
+  // fiddly with IO; this is simpler and reliable across browsers.
+  (function () {
+    const tabNav = document.querySelector('nav.tab-nav');
+    const partC = document.getElementById('part-c');
+    const diagnostic = document.getElementById('diagnostic');
+    if (!tabNav || !partC || !diagnostic) return;
+
+    let raf = null;
+    function update() {
+      raf = null;
+      const scrollY = window.scrollY || document.documentElement.scrollTop;
+      const pageNavHeight = 52;  // matches CSS top: 52px on .is-sticky
+      const partCTop = partC.getBoundingClientRect().top + scrollY;
+      const diagTop = diagnostic.getBoundingClientRect().top + scrollY;
+      const navHeight = tabNav.offsetHeight;
+      // Stick while we've scrolled past the workflow section's heading
+      // but the diagnostic section hasn't reached the sticky position yet.
+      const shouldStick = (
+        scrollY + pageNavHeight > partCTop + 80 &&
+        scrollY + pageNavHeight + navHeight < diagTop
+      );
+      tabNav.classList.toggle('is-sticky', shouldStick);
+      document.body.classList.toggle('workflow-sticky', shouldStick);
+    }
+
+    window.addEventListener('scroll', () => {
+      if (raf === null) raf = requestAnimationFrame(update);
+    }, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+  })();
+</script>
