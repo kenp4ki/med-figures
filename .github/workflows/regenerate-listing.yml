@@ -1,0 +1,75 @@
+name: Regenerate med-figures listing
+
+# Auto-regenerates med-figures-listing.txt on every push to main.
+# The listing is the authoritative source the figure-embed prompt (Prompt 5)
+# matches against, so it has to stay in sync hands-free with the actual repo state.
+#
+# DROP THIS FILE INTO YOUR med-figures REPO at .github/workflows/regenerate-listing.yml
+# Then push once. From then on, every time you push new JPEGs the listing updates itself.
+
+on:
+  push:
+    branches: [main]
+    # Don't trigger on edits to the listing itself (avoids infinite loop)
+    paths-ignore:
+      - 'med-figures-listing.txt'
+      - '.github/**'
+  workflow_dispatch:  # manual trigger button in the Actions tab
+
+permissions:
+  contents: write  # needs write to commit the regenerated listing back
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Generate listing
+        run: |
+          {
+            echo "# med-figures — GitHub repo listing (authoritative reference)"
+            echo "# Pattern: https://kenp4ki.github.io/med-figures/[folder]/[filename].jpg"
+            echo "# Auto-regenerated on every push by .github/workflows/regenerate-listing.yml"
+            echo "# Folders marked %20 have a literal leading space — URLs MUST use %20 before the folder name."
+            echo "# Non-.jpg files (.md, .pdf, .zip, .txt) are listed only as folder-identity confirmation; never embed them."
+            echo ""
+
+            # Walk every top-level directory; print a section header per folder, then sorted contents.
+            for dir in */; do
+              folder="${dir%/}"
+              # Skip hidden directories and the workflows folder itself
+              case "$folder" in
+                .git|.github) continue ;;
+              esac
+
+              echo "============================================================"
+              # Detect leading-space folder names (these need %20 in URLs)
+              if [[ "$folder" =~ ^\  ]]; then
+                trimmed="${folder# }"
+                echo "$trimmed  ← USE %20 PREFIX IN URLS (literal leading space)"
+              else
+                echo "$folder  ← clean"
+              fi
+              echo "============================================================"
+
+              # List files in folder, sorted, one per line, no path prefix
+              find "$dir" -maxdepth 1 -type f -printf '%f\n' | LC_ALL=C sort
+              echo ""
+            done
+          } > med-figures-listing.txt
+
+      - name: Commit listing if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet med-figures-listing.txt; then
+            echo "Listing unchanged — nothing to commit."
+          else
+            git add med-figures-listing.txt
+            git commit -m "Regenerate med-figures-listing.txt"
+            git push
+          fi
