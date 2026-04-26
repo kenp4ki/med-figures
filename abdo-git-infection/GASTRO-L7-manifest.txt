@@ -1,0 +1,5 @@
+GASTRO-L7_01_axr-day4-early-dilatation.jpg
+GASTRO-L7_02_axr-day7-toxic-megacolon.jpg
+GASTRO-L7_03_cxr-perforation.jpg
+GASTRO-L7_04_pseudomembranous-colitis.jpg
+GASTRO-L7_05_uc-colonoscopy.jpg
