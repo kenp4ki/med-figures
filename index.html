@@ -887,7 +887,8 @@
     <summary>Setup &amp; workflow</summary>
     <div class="lead-body">
       <p><strong>Setup</strong> (once per module): paste Parts A &amp; B back-to-back into the same <em>Project instructions / Custom instructions</em> field in Claude Projects. They both load automatically into every chat in that project &mdash; no separate prompt needed.</p>
-      <p><strong>Per lecture</strong>: upload your files into a new chat, then send the Part C prompts. Three workflow variants &mdash; single lecture (the default), retrofitting an older chat that lacks the setup, or a bundle of 2&ndash;3 linked lectures. Each finishes with an optional Cowork step to embed the figures directly into your Notion page.</p>
+      <p><strong>Per lecture</strong>: upload your files into a new chat, then send the Part C prompts. Three workflow variants &mdash; single lecture (the default), retrofitting an older chat that lacks the setup, or a bundle of 2&ndash;3 linked lectures. Each lecture is assigned a stable <em>module tag</em> (e.g. <code>ADR</code>, <code>DM</code>, <code>VIS</code>) at audit time; the tag flows through into filenames, figure references, and the GitHub-Pages embed step so nothing collides across lectures. The master tag table lives in <code>design-decisions.md</code>.</p>
+      <p><strong>Pipeline</strong>: build chat produces <code>.md</code> + tagged JPEGs + manifest locally; you push JPEGs to your GitHub Pages repo by hand; Cowork chat renders the <code>.md</code> into a Notion page (Prompt 4); a separate Notion-MCP chat embeds figures into the page using the GitHub-hosted URLs (Prompt 5). Three chats per lecture, two manual handoffs (push JPEGs, copy Notion page URL).</p>
     </div>
   </details>
 
@@ -1096,7 +1097,7 @@ NOTION-SPECIFIC OUTPUT RULES
 - &#x26A0;&#xFE0F; / &#x2B50; / &#x1F9E0; / &#x1F4D8; at the START of a standalone block &rarr; native Notion callout (red / yellow / blue / grey). NEVER use these icons inline inside bullets or mid-paragraph; they are block-level only.
 - --- &rarr; Notion divider, only between lectures, never within
 - Unicode arrows (&rarr; &uarr; &darr;), Greek (α β μ), subscripts (β₁ β₂) preserved exactly
-- &#x1F4CE; Figure LX.Y &mdash; [caption] &rarr; leave as-is. Reference to an external companion PDF.
+- &#x1F4CE; Figure [TAG]-L[N].[M] &mdash; [caption] &rarr; leave as-is. The [TAG] is the lecture's module tag (assigned in Prompt 1, e.g. <code>ADR</code>, <code>DM</code>, <code>VIS</code>); [N] is the lecture position within the module; [M] is the figure number. Legacy untagged refs (<code>&#x1F4CE; Figure L[N].[M]</code>) on already-built pages stay as-is &mdash; the embed step handles both.
 
 Do not explain the principles in the output. Just build the pages so they embody the principles. If unsure whether a chunk is too big, split it. If unsure whether something is high-yield, tag it &#x2B50;. If unsure whether bold is overused, remove some.</pre>
     <button class="expand-btn">Expand &darr;</button>
@@ -1128,8 +1129,12 @@ Do not explain the principles in the output. Just build the pages so they embody
   <div class="prompt-block collapsed">
     <button class="copy-btn" data-target="p1-text">Copy</button>
     <pre id="p1-text">Lecture: [NAME]
+Module tag: [TAG, e.g. ADR / DM / VIS &mdash; check the master table in design-decisions.md, or propose one if this module isn't there yet and I'll confirm]
 
 Read every uploaded file for this lecture. Then do the following in order. Do NOT start teaching yet.
+
+Step 0 &mdash; Confirm module tag.
+If I gave you a tag above, use it. If I left it blank or asked you to propose, suggest a 3&ndash;5 char all-caps tag derived from the lecture topic, check it doesn't visually clash with an obvious other module (e.g. don't propose VAS if the lecture is vasopressin and PIT already exists for pituitary), and ask me to confirm before continuing. The tag locks in here and is used in every figure filename, figure reference, manifest, and companion PDF for this lecture from this point on.
 
 Step 0 &mdash; Rasterize slides for visual fidelity.
 For every slide file uploaded (.pptx, .ppt, .pdf):
@@ -1164,7 +1169,7 @@ Verdict:
 
 For every PDF-verdict figure, ALSO record the crop box as four fractional coordinates (left, top, right, bottom, each 0.0&ndash;1.0) based on where the figure sits on the rendered slide JPEG. These will be used in Prompt 3 to auto-crop and export. If the figure occupies the whole slide, use 0,0,1,1. Get these right by viewing the JPEG before writing them down.
 
-Captions follow the format: "Figure L[lecture#].[figure#] &mdash; [short description]". Do NOT extract or crop anything yet &mdash; that happens in Prompt 3.
+Captions follow the format: "Figure [TAG]-L[N].[figure#] &mdash; [short description]" using the locked-in module tag from Step 0 (e.g. "Figure ADR-L1.3 &mdash; Steroid pathway"). [N] is the lecture position within the module &mdash; usually 1 unless this is part of a multi-lecture module. Do NOT extract or crop anything yet &mdash; that happens in Prompt 3.
 
 Step 3 &mdash; Classify.
 Tell me which archetype this lecture is:
@@ -1293,15 +1298,22 @@ PRESERVE THE ARCHETYPE STRUCTURE
 - MECHANISM: toggles ordered by causal logic, not slide order.
 - MIXED: combine as used in teaching.
 
-FIGURE INTEGRATION &mdash; TWO PARTS
+FIGURE INTEGRATION &mdash; THREE PARTS
 
-(a) In the .md:
-For every figure marked TEXT in the inventory &rarr; reconstruct it inline (mermaid code block, ASCII chain, or comparison table).
-For every figure marked PDF in the inventory &rarr; insert a line reading exactly:
-    &#x1F4CE; Figure LX.Y &mdash; [caption]
-at the toggle where the figure is needed. Do not try to describe the visual inline; that's the PDF's job.
+(a) Self-identifying header at the top of the .md.
+Right after the "How to use" blockquote and before the "Lecturer's voice" section, insert one line:
 
-(b) Extract the PDF-verdict figures as actual files.
+    **Module tag:** [TAG] &middot; **GitHub folder:** [folder-slug]
+
+[TAG] is the module tag locked in at Prompt 1. [folder-slug] is the GitHub Pages folder where this lecture's figures live (e.g. `adrenal`, `pharm`, `cerebral-inflammation`). The embed step (Prompt 5) reads this header before doing anything; mismatch between the page's tag and the folder's expected tag aborts the embed.
+
+(b) Figure references inside the .md.
+For every figure marked TEXT in the inventory &rarr; reconstruct inline (mermaid code block, ASCII chain, comparison table).
+For every figure marked PDF &rarr; insert exactly:
+    &#x1F4CE; Figure [TAG]-L[N].[M] &mdash; [caption]
+at the toggle where the figure is needed (e.g. "&#x1F4CE; Figure ADR-L1.3 &mdash; Steroid pathway"). Do not try to describe the visual inline; that's the embed's job.
+
+(c) Extract the PDF-verdict figures as actual files.
 The rasterized slide JPEGs from Prompt 1 should be in /home/claude/. If they aren't, re-rasterize first (same libreoffice + pdftoppm commands).
 For each PDF-verdict figure in the inventory, use PIL to crop from the rasterized JPEG using the stored fractional box coordinates, resize to max 1400px width, and save as JPEG quality 90 with optimize=True:
 
@@ -1316,9 +1328,12 @@ For each PDF-verdict figure in the inventory, use PIL to crop from the rasterize
             img = img.resize((maxw, int(img.height*ratio)), Image.LANCZOS)
         img.save(dst, 'JPEG', quality=90, optimize=True)
 
-Filename format: L[lecture#]_[figure#]_[slug].jpg (e.g. L3_2_substantia_nigra.jpg). Slugify the description: lowercase, underscores, no special characters.
+Filename format: [TAG]-L[N]_[FF]_[slug].jpg (e.g. ADR-L1_03_steroid_pathway.jpg). [FF] is the figure number zero-padded to 2 digits. Slugify the description: lowercase, underscores, no special characters.
 
-Then compile all extracted figures into a single PDF using the pdf skill, titled "Lecture [N] &mdash; Companion Figures.pdf". Each figure on its own page, with the caption written beneath. Figures ordered to match the order they appear in the .md.
+Then compile all extracted figures into a single PDF using the pdf skill, titled "[TAG]-L[N] Companion Figures.pdf" (e.g. "ADR-L1 Companion Figures.pdf"). Each figure on its own page, with the caption written beneath. Figures ordered to match the order they appear in the .md.
+
+(d) Manifest file.
+Produce one plain-text file [TAG]-L[N]-manifest.txt listing every JPEG filename produced for this lecture, one per line. The embed step uses this as the canonical "what this lecture has" so a missing-from-GitHub failure is caught at pre-flight, not at embed time.
 
 FORMATTING (for the .md)
 - ## H2 for each major section
@@ -1330,26 +1345,36 @@ FORMATTING (for the .md)
 - &#x1F9E0; lines for key distinctions/reusable patterns
 - > blockquote at the very top for the "How to use" intro
 - --- between lectures only
-- &#x1F4CE; references exactly as above
+- &#x1F4CE; references exactly as above (with the [TAG]-L[N].[M] prefix)
 
 Include at least ONE "reusable reasoning pattern" &#x1F9E0; callout per lecture &mdash; an exam method I can transfer to unseen cases. This callout sits as a block on its own, not inside a bullet list.
 
 DELIVERABLES &mdash; STRUCTURED OUTPUT FOLDER
 
-Create a clean sub-folder structure at /mnt/user-data/outputs/[Lecture-Name]/ so everything sits together and is easy to drag into downstream tools:
+Create a clean sub-folder structure at /mnt/user-data/outputs/[Lecture-Name]/:
 
     /mnt/user-data/outputs/[Lecture-Name]/
-    ├── [Lecture-Name].md                  &larr; drag into Cowork for Prompt 4
-    ├── [Lecture-Name]-figures.pdf         &larr; companion PDF (optional reference)
-    ├── figures/                           &larr; drag whole folder into Cowork for Prompt 5
-    │   ├── L[N]_[M]_[slug].jpg
-    │   ├── L[N]_[M]_[slug].jpg
+    ├── [Lecture-Name].md                       &larr; drag into Cowork for Prompt 4
+    ├── [TAG]-L[N] Companion Figures.pdf        &larr; companion PDF (offline reference)
+    ├── [TAG]-L[N]-manifest.txt                 &larr; canonical figure list for embed pre-flight
+    ├── figures/                                &larr; push contents of this folder to GitHub Pages [folder-slug]/
+    │   ├── [TAG]-L[N]_01_[slug].jpg
+    │   ├── [TAG]-L[N]_02_[slug].jpg
     │   └&hellip;
-    └── [Lecture-Name]-figures.zip         &larr; zipped JPEGs for mobile-friendly download
+    └── [TAG]-L[N]-figures.zip                  &larr; zipped JPEGs for mobile-friendly download
 
-Use the lecture's clean name for the folder (strip "(part 1 of 2)" / "Lecture:" etc., same convention as Prompt 4). Put the individual JPEGs inside figures/ as separate files (Prompt 5 needs them separate for filename-prefix matching), AND bundle the same JPEGs into a .zip in the parent folder &mdash; the zip preserves original filenames when downloaded on mobile, where Safari iOS otherwise renames individual files to "files-1.jpg", "files-2.jpg" etc.
+Use the lecture's clean name for the parent folder (strip "(part 1 of 2)" / "Lecture:" etc., same convention as Prompt 4). Put individual JPEGs inside figures/ as separate files, AND bundle the same JPEGs into a .zip in the parent folder &mdash; the zip preserves original filenames when downloaded on mobile (Safari iOS otherwise renames individual files to "files-1.jpg" etc.).
 
-At the end, call present_files on the folder itself (or on every file if presenting a folder isn't supported) so I can download the whole thing. Prioritise presenting in this order: .md first, figures/ folder next, zip next, PDF last.
+At the end, call present_files on the folder itself (or on every file if presenting a folder isn't supported). Prioritise presenting in this order: .md first, figures/ folder next, zip next, manifest, PDF last.
+
+NEXT STEPS BLOCK (print this verbatim at the very end of your response, after all artefacts are surfaced)
+
+    ---
+    Next steps:
+    1. Push the contents of `figures/` into your GitHub Pages repo at `med-figures/[folder-slug]/`. Push the manifest alongside.
+    2. Open Cowork; attach `[Lecture-Name].md`; paste Prompt 4. Note the Notion page URL Cowork emits.
+    3. Open a Notion-MCP chat (or Claude.ai with Notion connected); paste Prompt 5; attach `med-figures-listing.txt`; supply the Notion page URL from step 2.
+    ---
 
 Do not explain the design principles in the output. Just embody them.</pre>
     <button class="expand-btn">Expand &darr;</button>
@@ -1403,36 +1428,108 @@ Horizontal rule (---) &rarr; Notion divider.
     <button class="expand-btn">Expand &darr;</button>
   </div>
 
-  <h3 id="prompt-5">Prompt 5 &mdash; Embed figures into Notion (Cowork)</h3>
-  <p class="section-subtitle">Run in Cowork <em>after</em> Prompt 4 has created the Notion page. Point Cowork at the folder of individual JPEGs produced by Prompt 3 (filename format <code>L[lecture]_[figure]_[slug].jpg</code>).</p>
+  <h3 id="prompt-5">Prompt 5 &mdash; Embed figures into Notion via GitHub Pages</h3>
+  <p class="section-subtitle">Run in a fresh Notion-MCP chat (or claude.ai with Notion connected) <em>after</em> Prompt 4 has created the Notion page. Attach <code>med-figures-listing.txt</code> (the auto-generated index of your <code>med-figures</code> repo) and supply the Notion page URL. Embeds GitHub-Pages-hosted JPEGs as markdown image blocks below each <code>&#x1F4CE; Figure</code> reference. Replaces the older Cowork-based local-folder embed.</p>
   <div class="prompt-block collapsed">
     <button class="copy-btn" data-target="p5-text">Copy</button>
-    <pre id="p5-text">I have a Notion page for a lecture and a folder of labelled JPEG figures on my local machine. For every &#x1F4CE; Figure reference in the Notion page, upload the matching image as an image block immediately below that line, without removing the &#x1F4CE; reference.
+    <pre id="p5-text">Embed every figure on the supplied Notion page using GitHub-Pages-hosted JPEGs.
 
-MATCHING RULE
-For each line in the Notion page matching the pattern "&#x1F4CE; Figure L[N].[M] &mdash; [caption]", find the JPEG in the folder whose filename starts with L[N]_[M]_ (e.g. L3_2_substantia_nigra.jpg matches &#x1F4CE; Figure L3.2). Upload that JPEG as an image block directly below the &#x1F4CE; line. Do NOT delete or modify the &#x1F4CE; line itself &mdash; it stays as a visible caption marker above the image.
+INPUTS
+- Notion page URL: [PASTE]
+- Attached: med-figures-listing.txt (authoritative listing of every folder + filename in my GitHub Pages repo at https://kenp4ki.github.io/med-figures/)
 
-PLACEMENT DETAIL
-- If the &#x1F4CE; line is inside a toggle block, the image goes inside the same toggle, immediately beneath the &#x1F4CE; line.
-- If the &#x1F4CE; line is at top level, the image goes directly below it at top level.
-- Preserve all surrounding content and structure exactly.
+CORE TASK
+For every "&#x1F4CE; Figure [TAG]-L[N].[M] &mdash; caption" reference on the page, append an image embed line directly below it:
+    ![caption](https://kenp4ki.github.io/med-figures/[folder]/[filename].jpg)
 
-IMAGE CAPTIONS
-Use the text after the em-dash in the &#x1F4CE; line as the Notion image caption (e.g. for "&#x1F4CE; Figure L3.2 &mdash; Substantia nigra comparison", the image caption is "Substantia nigra comparison"). If the platform doesn't cleanly support image captions, skip the caption &mdash; the &#x1F4CE; line above the image already carries it.
+Do NOT remove the &#x1F4CE; line &mdash; it stays as a visible caption marker above the image. Match filenames against the attached listing. NEVER guess filenames; if a reference doesn't resolve in the listing, log it and skip.
 
-ERROR HANDLING
-- If a &#x1F4CE; reference has no matching JPEG in the folder, leave the &#x1F4CE; line in place (unchanged) and continue &mdash; do not halt the whole pipeline over one missing image. At the end, print a list of any unmatched references so I can follow up.
-- If a JPEG in the folder has no matching &#x1F4CE; reference in the page, ignore it (it may have been removed from the final .md).
-- If Notion rejects an upload (size, format, rate limit), retry once; if still failing, log the figure ID and continue.
+PRE-FLIGHT (run before any updates)
+1. Fetch the page with notion-fetch.
+2. Read the self-identifying header: "**Module tag:** [TAG] &middot; **GitHub folder:** [folder-slug]". This tells you which folder in the listing to match against. If the header is missing, ask before proceeding (legacy pages may not have one &mdash; in that case, infer the folder from page title + the page-to-folder mapping below, and confirm with me).
+3. Walk every &#x1F4CE; reference on the page. For each, look up the matching filename in the listing under [folder-slug]. Build a list of (reference, resolved URL or "MISSING").
+4. Report the resolution table as a short summary BEFORE making any update calls. If anything is MISSING, stop and ask whether to proceed (skipping missing) or whether I need to push more JPEGs first.
+5. Only after I confirm (or if everything resolves cleanly) do you proceed to update.
+
+MATCHING RULE &mdash; TAGGED REFERENCES (current convention)
+- Reference: "&#x1F4CE; Figure ADR-L1.3 &mdash; Steroid pathway"
+- Filename pattern: [TAG]-L[N]_[FF]_[slug].jpg where FF is the figure number zero-padded to 2 digits
+- Match: ADR-L1_03_steroid_pathway.jpg in folder /adrenal/
+
+MATCHING RULE &mdash; LEGACY UNTAGGED REFERENCES
+Older pages use "&#x1F4CE; Figure L[N].[M] &mdash; caption" (no tag prefix). For these:
+- Filename pattern: L[N]_[M]_[slug].jpg (no zero-padding, no tag)
+- Folder is inferred from page title via the mapping table below
+- Special filename patterns also exist for /pharm/ and /psychiatry/ &mdash; "Figure_LX.Y_Capitalised_Words.jpg" with literal "Figure_" prefix and a dot (not underscore) between L# and figure#
+
+Do not modernise legacy references; embed them with their existing pattern.
+
+URL CONSTRUCTION
+Standard:
+    https://kenp4ki.github.io/med-figures/[folder]/[filename].jpg
+
+Folders with a literal leading space currently require %20 encoding (legacy quirk being phased out): adrenal, athero, calcium, dementia. If a folder isn't marked clean or %20 in the listing, test one URL with web_fetch before bulk-embedding. If it 404s, use %20.
+
+UPDATE BEHAVIOUR
+- One notion-update-page call per page with a content_updates array.
+- Each entry: {old_str = exact figure-reference line as it appears on the page, new_str = same line + "\n\n" + matching tab indent + "![alt](URL)"}.
+- For a reference inside a single toggle: prefix new_str's image line with "\t". Inside nested toggles: "\t\t". Mirror the indent of the &#x1F4CE; line itself.
+- For ECG / ABG pages where captions are wrapped in **bold**: preserve the bold markdown verbatim in old_str.
+- Multi-figure lines ("&#x1F4CE; Figures L1.4 &amp; L1.5 &mdash; ...") get stacked image embeds, one per figure, separated by blank lines.
+
+IDEMPOTENCE
+If a reference already has an image embed directly below it, skip it. Don't double-embed on re-runs.
+
+PAGE-TO-FOLDER MAPPING (for legacy pages without a self-identifying header)
+- Hypoadrenal / Hyperadrenal &rarr; adrenal (%20)
+- Atherosclerosis &rarr; athero (%20)
+- Calcium L5.5 &rarr; calcium (%20)
+- Dementia &rarr; dementia (%20)
+- Appetite / Malnutrition &rarr; appetite-malnutrition
+- Auditory / Vestibular / BPPV &rarr; audio-vestibular
+- Structural Heart Disease (GOL / SHD / Cardiomyopathies) &rarr; cardiac
+- Cerebral Inflammation &rarr; cerebral-inflammation
+- CKD and Dialysis &rarr; ckd-dialysis
+- Diabetes T1 / T2 / Complications &rarr; diabetes
+- ECG L1 / ABG L2 &rarr; ecg-abg (zero-padded numbers, BOLD captions)
+- Specific Fractures / Children's Orthopaedics &rarr; fractures-children
+- GI Cancers &rarr; gi-cancers
+- General/Surgical GI &rarr; gi-surgery
+- Gut Immunology &rarr; gut-immunology
+- Haemostasis &rarr; haemostasis
+- Headache (L3.8 three-segment numbering) &rarr; headache
+- Hyperthyroidism (L14_X) &rarr; hyperthyroid
+- Urinary Incontinence &rarr; incontinence
+- Infertility / Reproductive Treatments &rarr; infertility-repro (zero-padded)
+- Lung Cancer &rarr; lung-cancer
+- Obesity &rarr; obesity
+- Pharmacology &rarr; pharm (special "Figure_LX.Y_Cap_Words" filename pattern)
+- Hypopituitarism / Pituitary / Vasopressin &rarr; pituitary-vasopressin
+- Psychiatry &rarr; psychiatry (special filename pattern, same as pharm)
+- Respiratory L1 &rarr; respiratory
+- RA / Lupus &rarr; rheum
+- Sodium-K / Water-acid-base &rarr; sodium-water-kidney
+- Skin Systemic Disease / Skin Infections &amp; Infestations &rarr; upgraded-skin-infections-infestations (PLURAL infections; deprecated skin-infection-infestations folder)
+- Upper GI Disorders &rarr; upper-gi
+- Vascular Endothelium / Valvular &rarr; vascular
+- Visual System &rarr; visual (zero-padded)
+
+If a page isn't in this mapping AND has no self-identifying header, ask before embedding.
+
+CONTEXT-LIMIT SELF-MONITORING
+Soft check &mdash; every 2 pages completed (in batch use):
+- Are tool results being truncated (`[Older tool result cleared...]`)?
+- Have you made &gt;40 tool calls this session?
+- Does fetching/updating feel sluggish?
+If any are true, finish the current page cleanly, output a handoff report (pages completed / skipped / remaining IDs), and tell me to start a new chat with this prompt + the listing + the remaining page IDs.
+
+Hard stop &mdash; stop immediately:
+- Multiple back-to-back `[Older tool result cleared]` messages
+- &gt;60 tool calls in the session
+- Any tool failure that looks context-related
 
 DELIVERABLE
-One report at the end:
-- Figures uploaded successfully: count + list of figure IDs
-- Figures unmatched (&#x1F4CE; with no JPEG): list
-- Figures skipped (JPEG with no &#x1F4CE;): list
-- Upload failures: list with reason
-
-Do not restructure the page. Do not add page properties, comments, or database entries. The only change you make is adding image blocks below existing &#x1F4CE; lines.</pre>
+After updates land, print a one-line confirmation per page (e.g. "&#x2705; Adrenal-L1 &mdash; 18 figures embedded, 0 skipped") plus any unresolved-reference notes. No restructuring. No page-property changes. The only change you make is appending image embeds below existing &#x1F4CE; lines.</pre>
     <button class="expand-btn">Expand &darr;</button>
   </div>
   </div>
@@ -1463,9 +1560,15 @@ Do not restructure the page. Do not add page properties, comments, or database e
 
 === NOW DO PROMPT 1 &mdash; AUDIT, FIGURE INVENTORY, CLASSIFY ===
 
+Lecture: [NAME]
+Module tag: [TAG, e.g. ADR / DM / VIS &mdash; check the master table in design-decisions.md, or propose one if this module isn't there yet and I'll confirm]
+
 The lecture files are already uploaded earlier in this chat. Do NOT assume you can skip rasterization based on what you already read &mdash; the visual pass is what makes the figure inventory reliable, and crop-box coordinates cannot be guessed from memory.
 
-Step 0 &mdash; Rasterize slides for visual fidelity.
+Step 0a &mdash; Confirm module tag.
+If I gave you a tag above, use it. If I left it blank or asked you to propose, suggest a 3&ndash;5 char all-caps tag derived from the lecture topic, check it doesn't visually clash with an obvious other module, and ask me to confirm before continuing. The tag locks in here and is used in every figure filename, figure reference, manifest, and companion PDF for this lecture from this point on.
+
+Step 0b &mdash; Rasterize slides for visual fidelity.
 For every slide file uploaded earlier in this chat (.pptx, .ppt, .pdf):
 - If not already PDF, convert with libreoffice:
     libreoffice --headless --convert-to pdf [file] --outdir /home/claude
@@ -1498,7 +1601,7 @@ Verdict:
 
 For every PDF-verdict figure, ALSO record the crop box as four fractional coordinates (left, top, right, bottom, each 0.0&ndash;1.0) based on where the figure sits on the rendered slide JPEG. If the figure occupies the whole slide, use 0,0,1,1. Get these right by viewing the JPEG before writing them down.
 
-Captions: "Figure L[lecture#].[figure#] &mdash; [short description]". Do NOT extract or crop anything yet.
+Captions: "Figure [TAG]-L[N].[figure#] &mdash; [short description]" using the locked-in module tag from Step 0a (e.g. "Figure ADR-L1.3 &mdash; Steroid pathway"). Do NOT extract or crop anything yet.
 
 Step 3 &mdash; Classify.
 Tell me which archetype this lecture is (MECHANISM / CASCADE / ATLAS / MIXED) with a one-paragraph justification.
@@ -1652,15 +1755,22 @@ PRESERVE THE ARCHETYPE STRUCTURE
 - MECHANISM: toggles ordered by causal logic, not slide order.
 - MIXED: combine as used in teaching.
 
-FIGURE INTEGRATION &mdash; TWO PARTS
+FIGURE INTEGRATION &mdash; THREE PARTS
 
-(a) In the .md:
-For every figure marked TEXT in the inventory &rarr; reconstruct it inline (mermaid code block, ASCII chain, or comparison table).
-For every figure marked PDF in the inventory &rarr; insert a line reading exactly:
-    &#x1F4CE; Figure LX.Y &mdash; [caption]
-at the toggle where the figure is needed. Do not try to describe the visual inline; that's the PDF's job.
+(a) Self-identifying header at the top of the .md.
+Right after the "How to use" blockquote and before the "Lecturer's voice" section, insert one line:
 
-(b) Extract the PDF-verdict figures as actual files.
+    **Module tag:** [TAG] &middot; **GitHub folder:** [folder-slug]
+
+[TAG] is the module tag locked in at Step 0a of Prompt 1. [folder-slug] is the GitHub Pages folder where this lecture's figures live. The embed step (Prompt 5) reads this header before doing anything; mismatch aborts the embed.
+
+(b) Figure references inside the .md.
+For every figure marked TEXT in the inventory &rarr; reconstruct inline (mermaid code block, ASCII chain, comparison table).
+For every figure marked PDF &rarr; insert exactly:
+    &#x1F4CE; Figure [TAG]-L[N].[M] &mdash; [caption]
+at the toggle where the figure is needed (e.g. "&#x1F4CE; Figure ADR-L1.3 &mdash; Steroid pathway").
+
+(c) Extract the PDF-verdict figures as actual files.
 The rasterized slide JPEGs from Prompt 1 should be in /home/claude/. If they aren't, re-rasterize first (same libreoffice + pdftoppm commands).
 For each PDF-verdict figure in the inventory, use PIL to crop from the rasterized JPEG using the stored fractional box coordinates, resize to max 1400px width, and save as JPEG quality 90 with optimize=True:
 
@@ -1675,9 +1785,12 @@ For each PDF-verdict figure in the inventory, use PIL to crop from the rasterize
             img = img.resize((maxw, int(img.height*ratio)), Image.LANCZOS)
         img.save(dst, 'JPEG', quality=90, optimize=True)
 
-Filename format: L[lecture#]_[figure#]_[slug].jpg (e.g. L3_2_substantia_nigra.jpg). Slugify the description: lowercase, underscores, no special characters.
+Filename format: [TAG]-L[N]_[FF]_[slug].jpg (e.g. ADR-L1_03_steroid_pathway.jpg). [FF] is the figure number zero-padded to 2 digits. Slugify the description: lowercase, underscores, no special characters.
 
-Then compile all extracted figures into a single PDF using the pdf skill, titled "Lecture [N] &mdash; Companion Figures.pdf". Each figure on its own page, with the caption written beneath. Figures ordered to match the order they appear in the .md.
+Then compile all extracted figures into a single PDF using the pdf skill, titled "[TAG]-L[N] Companion Figures.pdf". Each figure on its own page with caption beneath. Figures ordered to match the order they appear in the .md.
+
+(d) Manifest file.
+Produce one plain-text file [TAG]-L[N]-manifest.txt listing every JPEG filename produced, one per line. The embed step uses this for pre-flight verification.
 
 FORMATTING (for the .md)
 - ## H2 for each major section
@@ -1689,26 +1802,34 @@ FORMATTING (for the .md)
 - &#x1F9E0; lines for key distinctions/reusable patterns
 - &gt; blockquote at the very top for the "How to use" intro
 - --- between lectures only
-- &#x1F4CE; references exactly as above
+- &#x1F4CE; references exactly as above (with the [TAG]-L[N].[M] prefix)
 
 Include at least ONE "reusable reasoning pattern" &#x1F9E0; callout per lecture &mdash; an exam method I can transfer to unseen cases. This callout sits as a block on its own, not inside a bullet list.
 
 DELIVERABLES &mdash; STRUCTURED OUTPUT FOLDER
 
-Create a clean sub-folder structure at /mnt/user-data/outputs/[Lecture-Name]/ so everything sits together and is easy to drag into downstream tools:
-
     /mnt/user-data/outputs/[Lecture-Name]/
-    ├── [Lecture-Name].md                  &larr; drag into Cowork for Prompt 4
-    ├── [Lecture-Name]-figures.pdf         &larr; companion PDF (optional reference)
-    ├── figures/                           &larr; drag whole folder into Cowork for Prompt 5
-    │   ├── L[N]_[M]_[slug].jpg
-    │   ├── L[N]_[M]_[slug].jpg
+    ├── [Lecture-Name].md                       &larr; drag into Cowork for Prompt 4
+    ├── [TAG]-L[N] Companion Figures.pdf        &larr; companion PDF (offline reference)
+    ├── [TAG]-L[N]-manifest.txt                 &larr; canonical figure list for embed pre-flight
+    ├── figures/                                &larr; push contents to GitHub Pages [folder-slug]/
+    │   ├── [TAG]-L[N]_01_[slug].jpg
+    │   ├── [TAG]-L[N]_02_[slug].jpg
     │   └&hellip;
-    └── [Lecture-Name]-figures.zip         &larr; zipped JPEGs for mobile-friendly download
+    └── [TAG]-L[N]-figures.zip                  &larr; zipped JPEGs for mobile-friendly download
 
-Use the lecture's clean name for the folder (strip "(part 1 of 2)" / "Lecture:" etc., same convention as Prompt 4). Put the individual JPEGs inside figures/ as separate files (Prompt 5 needs them separate for filename-prefix matching), AND bundle the same JPEGs into a .zip in the parent folder &mdash; the zip preserves original filenames when downloaded on mobile, where Safari iOS otherwise renames individual files to "files-1.jpg", "files-2.jpg" etc.
+Use the lecture's clean name for the parent folder (strip "(part 1 of 2)" / "Lecture:" etc.). Put individual JPEGs inside figures/ as separate files, AND bundle the same JPEGs into a .zip in the parent folder.
 
-At the end, call present_files on the folder itself (or on every file if presenting a folder isn't supported) so I can download the whole thing. Prioritise presenting in this order: .md first, figures/ folder next, zip next, PDF last.
+At the end, call present_files on the folder itself. Prioritise: .md first, figures/ folder next, zip next, manifest, PDF last.
+
+NEXT STEPS BLOCK (print verbatim at the very end of your response, after all artefacts are surfaced)
+
+    ---
+    Next steps:
+    1. Push the contents of `figures/` into your GitHub Pages repo at `med-figures/[folder-slug]/`. Push the manifest alongside.
+    2. Open Cowork; attach `[Lecture-Name].md`; paste Prompt 4. Note the Notion page URL.
+    3. Open a Notion-MCP chat; paste Prompt 5; attach `med-figures-listing.txt`; supply the Notion page URL.
+    ---
 
 Do not explain the design principles in the output. Just embody them.</pre>
       <button class="expand-btn">Expand &darr;</button>
@@ -1755,38 +1876,95 @@ Blockquote at top (&gt; &hellip;) &rarr; grey callout with &#x1F4D8;. Horizontal
       <button class="expand-btn">Expand &darr;</button>
     </div>
 
-    <h3 id="rp5">Prompt 5 &mdash; Embed figures into Notion (Cowork)</h3>
-    <p class="section-subtitle">Run in Cowork <em>after</em> Prompt 4. Same as the single-lecture version &mdash; duplicated inline so you don't need to flip tabs.</p>
+    <h3 id="rp5">Prompt 5 &mdash; Embed figures into Notion via GitHub Pages</h3>
+    <p class="section-subtitle">Same as the single-lecture version. Run in a fresh Notion-MCP chat <em>after</em> Prompt 4 has created the Notion page. Attach <code>med-figures-listing.txt</code> and supply the Notion page URL. See the single-lecture <a href="#prompt-5">Prompt 5</a> for the full prompt &mdash; duplicated below so you don't need to flip tabs.</p>
     <div class="prompt-block collapsed">
       <button class="copy-btn" data-target="rp5-text">Copy</button>
-      <pre id="rp5-text">I have a Notion page for a lecture and a folder of labelled JPEG figures on my local machine. For every &#x1F4CE; Figure reference in the Notion page, upload the matching image as an image block immediately below that line, without removing the &#x1F4CE; reference.
+      <pre id="rp5-text">Embed every figure on the supplied Notion page using GitHub-Pages-hosted JPEGs.
 
-MATCHING RULE
-For each line in the Notion page matching the pattern "&#x1F4CE; Figure L[N].[M] &mdash; [caption]", find the JPEG in the folder whose filename starts with L[N]_[M]_ (e.g. L3_2_substantia_nigra.jpg matches &#x1F4CE; Figure L3.2). Upload that JPEG as an image block directly below the &#x1F4CE; line. Do NOT delete or modify the &#x1F4CE; line itself &mdash; it stays as a visible caption marker above the image.
+INPUTS
+- Notion page URL: [PASTE]
+- Attached: med-figures-listing.txt (authoritative listing of every folder + filename in my GitHub Pages repo at https://kenp4ki.github.io/med-figures/)
 
-PLACEMENT DETAIL
-- If the &#x1F4CE; line is inside a toggle block, the image goes inside the same toggle, immediately beneath the &#x1F4CE; line.
-- If the &#x1F4CE; line is at top level, the image goes directly below it at top level.
-- Preserve all surrounding content and structure exactly.
+CORE TASK
+For every "&#x1F4CE; Figure [TAG]-L[N].[M] &mdash; caption" reference on the page, append an image embed line directly below it:
+    ![caption](https://kenp4ki.github.io/med-figures/[folder]/[filename].jpg)
 
-IMAGE CAPTIONS
-Use the text after the em-dash in the &#x1F4CE; line as the Notion image caption. If the platform doesn't cleanly support image captions, skip the caption &mdash; the &#x1F4CE; line above the image already carries it.
+Do NOT remove the &#x1F4CE; line. Match filenames against the attached listing. NEVER guess; if a reference doesn't resolve, log it and skip.
 
-ERROR HANDLING
-- If a &#x1F4CE; reference has no matching JPEG in the folder, leave the &#x1F4CE; line in place and continue &mdash; do not halt over one missing image. At the end, print a list of unmatched references.
-- If a JPEG in the folder has no matching &#x1F4CE; reference in the page, ignore it.
-- If Notion rejects an upload, retry once; if still failing, log the figure ID and continue.
+PRE-FLIGHT
+1. Fetch the page with notion-fetch.
+2. Read self-identifying header: "**Module tag:** [TAG] &middot; **GitHub folder:** [folder-slug]". If missing (legacy page), infer folder from the page-to-folder mapping below and confirm with me.
+3. Walk every &#x1F4CE; reference. Resolve each against the listing. Build a (reference, URL or "MISSING") table.
+4. Report the table BEFORE updating. If any are MISSING, ask whether to skip them or wait for me to push more JPEGs.
+5. Only after I confirm do you update.
+
+MATCHING &mdash; TAGGED (current convention)
+Reference "&#x1F4CE; Figure ADR-L1.3 &mdash; Steroid pathway" &rarr; filename ADR-L1_03_steroid_pathway.jpg in /adrenal/. Filename pattern: [TAG]-L[N]_[FF]_[slug].jpg with FF zero-padded.
+
+MATCHING &mdash; LEGACY UNTAGGED
+"&#x1F4CE; Figure L[N].[M] &mdash; caption" &rarr; L[N]_[M]_[slug].jpg (no zero-padding). Folder inferred from page title via mapping below. Special filename pattern in /pharm/ and /psychiatry/: "Figure_LX.Y_Cap_Words.jpg".
+
+URL CONSTRUCTION
+    https://kenp4ki.github.io/med-figures/[folder]/[filename].jpg
+Folders requiring %20 (legacy quirk): adrenal, athero, calcium, dementia. If a folder isn't marked clean or %20, web_fetch one URL first; if 404, use %20.
+
+UPDATE
+- One notion-update-page call per page with content_updates array.
+- Each entry: old_str = exact &#x1F4CE; line, new_str = same line + "\n\n" + matching tab indent + "![alt](URL)".
+- Inside single toggle: prefix with "\t". Nested toggle: "\t\t". Mirror the &#x1F4CE; line's indent.
+- ECG / ABG: captions are bold; preserve the **...** verbatim in old_str.
+- Multi-figure ("&#x1F4CE; Figures L1.4 &amp; L1.5"): stack image embeds.
+
+IDEMPOTENCE
+Skip references that already have an image embed below.
+
+PAGE-TO-FOLDER MAPPING (for legacy pages without self-identifying header)
+- Hypoadrenal / Hyperadrenal &rarr; adrenal (%20)
+- Atherosclerosis &rarr; athero (%20)
+- Calcium L5.5 &rarr; calcium (%20)
+- Dementia &rarr; dementia (%20)
+- Appetite / Malnutrition &rarr; appetite-malnutrition
+- Auditory / Vestibular / BPPV &rarr; audio-vestibular
+- Structural Heart Disease &rarr; cardiac
+- Cerebral Inflammation &rarr; cerebral-inflammation
+- CKD and Dialysis &rarr; ckd-dialysis
+- Diabetes T1 / T2 / Complications &rarr; diabetes
+- ECG / ABG &rarr; ecg-abg (zero-padded, BOLD captions)
+- Specific Fractures / Children's Orthopaedics &rarr; fractures-children
+- GI Cancers &rarr; gi-cancers
+- General/Surgical GI &rarr; gi-surgery
+- Gut Immunology &rarr; gut-immunology
+- Haemostasis &rarr; haemostasis
+- Headache &rarr; headache (three-segment numbering)
+- Hyperthyroidism &rarr; hyperthyroid (uses L14_X)
+- Urinary Incontinence &rarr; incontinence
+- Infertility / Reproductive Treatments &rarr; infertility-repro (zero-padded)
+- Lung Cancer &rarr; lung-cancer
+- Obesity &rarr; obesity
+- Pharmacology &rarr; pharm (special "Figure_LX.Y_Cap_Words" pattern)
+- Hypopituitarism / Pituitary / Vasopressin &rarr; pituitary-vasopressin
+- Psychiatry &rarr; psychiatry (special pattern, same as pharm)
+- Respiratory L1 &rarr; respiratory
+- RA / Lupus &rarr; rheum
+- Sodium-K / Water-acid-base &rarr; sodium-water-kidney
+- Skin Systemic / Skin Infections &amp; Infestations &rarr; upgraded-skin-infections-infestations (PLURAL)
+- Upper GI Disorders &rarr; upper-gi
+- Vascular Endothelium / Valvular &rarr; vascular
+- Visual System &rarr; visual (zero-padded)
+
+CONTEXT-LIMIT SELF-MONITORING
+Soft check every 2 pages: tool result truncation, &gt;40 tool calls, sluggish fetches &mdash; if any, finish current page, output handoff (completed / skipped / remaining IDs), tell me to start fresh.
+Hard stop: back-to-back `[Older tool result cleared]`, &gt;60 tool calls, context-related tool failure.
 
 DELIVERABLE
-One report at the end: figures uploaded, figures unmatched, figures skipped, upload failures.
-
-Do not restructure the page. Do not add page properties, comments, or database entries. The only change is adding image blocks below existing &#x1F4CE; lines.</pre>
+One-line confirmation per page: "&#x2705; [Page name] &mdash; N figures embedded, M skipped". Plus any unresolved-reference notes. No restructuring. No page-property changes. The only change is appending image embeds below existing &#x1F4CE; lines.</pre>
       <button class="expand-btn">Expand &darr;</button>
     </div>
   </div>
 
   <div class="tab-panel" data-panel="bundle" role="tabpanel">
-    <p class="tab-intro">Use when you upload 2&ndash;3 tightly linked lectures in one chat (T1DM + T2DM + diabetes complications; infertility + reproductive treatments; asthma + COPD). Produces <strong>one Notion page per lecture</strong> (never a megapage). A <em>separate</em> overview page is produced only when the lectures are genuinely integrated in how they&rsquo;re examined &mdash; e.g. when the clinical workflow of one flows directly into the next (infertility investigations &rarr; treatments), or when there&rsquo;s a named downstream lecture that depends on upstream content (diabetes complications). For bundles that merely share vocabulary or structure (T1 vs T2, asthma vs COPD), no overview page &mdash; cross-references inside each lecture page are enough, because exam SBAs still live inside each lecture&rsquo;s own TILOs. The &ldquo;Bundle shapes reference&rdquo; below gives the decision rule.</p>
+    <p class="tab-intro">Use when you upload 2&ndash;3 tightly linked lectures in one chat (T1DM + T2DM + diabetes complications; infertility + reproductive treatments; asthma + COPD). Produces <strong>one Notion page per lecture</strong> &mdash; never a megapage, never a separate "bundle overview" page. Integration between lectures is handled inside each individual page via cross-reference callouts (&#x1F9E0; "See also: <em>Valvular Disease &rarr; Why vegetations form on damaged valves</em>") at the points where the connection actually matters; this beats a separate overview because the cross-refs sit next to the bullet that triggered them, no extra file goes stale, exam SBAs are tagged to each lecture's own TILOs anyway, and clean lecture names in the cross-ref text survive future Notion renames where "L1 &mdash;"-style labels would not. The "Bundle shapes reference" below sets teaching order and the per-lecture cross-reference layer.</p>
 
     <nav class="prompt-jump">
       <a href="#bp1"><span class="num">01</span><span class="label">Audit</span></a>
@@ -1799,26 +1977,26 @@ Do not restructure the page. Do not add page properties, comments, or database e
     <details class="explainer">
       <summary>Bundle shapes reference</summary>
       <div class="explainer-body">
-        <p>Claude classifies the bundle shape in Prompt 1. The shape governs TWO things: (a) the teaching order in Prompt 2, and (b) whether a separate overview page is produced at all. The bar for an overview page is deliberately high &mdash; exam SBAs are tagged to each lecture&rsquo;s own TILOs, so the only bundles that genuinely benefit from an overview are those where the <em>clinical workflow itself</em> forces integration. When in doubt, skip the overview and rely on cross-references inside each lecture page.</p>
+        <p>Claude classifies the bundle shape in Prompt 1. The shape governs ONE thing: the teaching order in Prompt 2. There is no separate overview page in any shape &mdash; integration between lectures lives inside each lecture's page via cross-reference callouts at the points where the connection matters.</p>
         <div class="note">
-          <p class="note-title">Sequential &mdash; overview YES</p>
-          <p>Lectures form a clinical chain where the output of one is the input to the next. <em>Infertility workup &rarr; reproductive treatments.</em> A real exam stem on treatment selection requires investigation findings from the other lecture. Decision-spine overview page pays its cost.</p>
+          <p class="note-title">Sequential</p>
+          <p>Lectures form a clinical chain where the output of one is the input to the next. <em>Infertility workup &rarr; reproductive treatments.</em> Teach in order; cross-refs inside each page point at the relevant toggle in the next/previous lecture.</p>
         </div>
         <div class="note">
-          <p class="note-title">Shared outcomes (with named downstream lecture) &mdash; overview YES</p>
-          <p>N upstream items converge on a named downstream lecture that depends on upstream content. <em>T1DM + T2DM &rarr; diabetes complications.</em> The downstream lecture IS the integration point, so a convergence page is justified.</p>
+          <p class="note-title">Shared outcomes (with named downstream lecture)</p>
+          <p>N upstream items converge on a named downstream lecture. <em>T1DM + T2DM &rarr; diabetes complications.</em> Teach upstream first, then downstream as the convergence; the downstream lecture's page carries cross-refs back to upstream lectures at the points where the upstream identity matters.</p>
         </div>
         <div class="note">
-          <p class="note-title">Parallel contrast &mdash; overview NO</p>
-          <p>N items share features but are examined within their own lectures, not against each other. <em>T1DM vs T2DM; asthma vs COPD; UC vs Crohn&rsquo;s.</em> Tempting to build a comparator, but SBAs still live inside each lecture &mdash; cross-reference callouts inside each lecture page are enough. A whole comparator page adds revision overhead without adding exam yield.</p>
+          <p class="note-title">Parallel contrast</p>
+          <p>N items share features but are examined within their own lectures. <em>T1DM vs T2DM; asthma vs COPD; UC vs Crohn&rsquo;s.</em> Interleave teaching by shared dimension. Each page carries cross-refs to its sibling at the points the contrast matters.</p>
         </div>
         <div class="note">
-          <p class="note-title">Hub-and-spoke &mdash; overview NO</p>
-          <p>One core lecture + satellite deep-dives. <em>Heart failure overview + RAAS inhibitors + devices.</em> The hub lecture already carries the integration framing. Cross-references from satellites back to the hub work better than a separate map page.</p>
+          <p class="note-title">Hub-and-spoke</p>
+          <p>One core lecture + satellite deep-dives. <em>Heart failure overview + RAAS inhibitors + devices.</em> Hub first, then satellites. Cross-refs go from satellites back to the hub.</p>
         </div>
         <div class="note">
-          <p class="note-title">Loose link &mdash; overview NO</p>
-          <p>Uploaded together but no strong structural relationship. Run each through the single-lecture workflow separately. No cross-references needed.</p>
+          <p class="note-title">Loose link</p>
+          <p>Uploaded together but no strong structural relationship. Run each through the single-lecture workflow separately. No cross-references.</p>
         </div>
       </div>
     </details>
@@ -1827,24 +2005,27 @@ Do not restructure the page. Do not add page properties, comments, or database e
     <div class="prompt-block collapsed">
       <button class="copy-btn" data-target="bp1-text">Copy</button>
       <pre id="bp1-text">Bundle: [descriptive name, e.g. "Diabetes &mdash; T1DM, T2DM, complications"]
-Lectures in this bundle:
-  L1: [name]
-  L2: [name]
-  L3: [name]
+Lectures in this bundle (each gets its own module tag &mdash; check master table in design-decisions.md, or propose if missing):
+  L1: [clean lecture name] &mdash; tag: [TAG, e.g. DM-T1]
+  L2: [clean lecture name] &mdash; tag: [TAG, e.g. DM-T2]
+  L3: [clean lecture name] &mdash; tag: [TAG, e.g. DM-COMP]
 
 Read every uploaded file for every lecture in the bundle. Then do the following in order. Do NOT start teaching yet.
 
-Step 0 &mdash; Rasterize slides (all lectures).
+Step 0a &mdash; Confirm module tags.
+Each lecture in the bundle has its own module tag. If I supplied tags above, use them. If any are blank or you were asked to propose, suggest 3&ndash;7 char all-caps tags derived from the lecture topic (sub-tags within a module are fine, e.g. DM-T1 / DM-T2 / DM-COMP) and ask me to confirm before continuing. Tags lock in here and flow through filenames, figure refs, manifests, and companion PDFs.
+
+Step 0b &mdash; Rasterize slides (all lectures).
 For every slide file uploaded, across all lectures:
 - If not already PDF: libreoffice --headless --convert-to pdf [file] --outdir /home/claude
-- Rasterize to JPEG at 200 DPI with lecture-prefixed stems to avoid collision:
-    pdftoppm -jpeg -r 200 /home/claude/L1_[stem].pdf /home/claude/L1_[stem]
-    pdftoppm -jpeg -r 200 /home/claude/L2_[stem].pdf /home/claude/L2_[stem]
+- Rasterize to JPEG at 200 DPI with TAG-prefixed stems to avoid collision across lectures:
+    pdftoppm -jpeg -r 200 /home/claude/[TAG1]_[stem].pdf /home/claude/[TAG1]_[stem]
+    pdftoppm -jpeg -r 200 /home/claude/[TAG2]_[stem].pdf /home/claude/[TAG2]_[stem]
     (etc.)
-View each JPEG individually. All figure references in later steps carry their L1_/L2_/L3_ prefix. Process lecture-by-lecture: finish L1's slides before starting L2's, to keep the audit structure clean. If the system tool-use limit fires, resume seamlessly; do NOT skip slides or batch-summarise.
+View each JPEG individually. Process lecture-by-lecture: finish lecture 1's slides before starting lecture 2's. If the system tool-use limit fires, resume seamlessly; do NOT skip slides or batch-summarise.
 
 Step 1 &mdash; Per-lecture audit.
-One audit per lecture, clearly headed by lecture. Same format as single-lecture: every teaching point slide-by-slide, with transcript-emphasis tags where they apply:
+One audit per lecture, clearly headed by lecture name + tag. Same format as single-lecture: every teaching point slide-by-slide, with transcript-emphasis tags where they apply:
 [EXAMINER SIGNAL] / [REPEATED] / [DE-EMPHASISED] / [TUTORIAL/TBL REINFORCED] / [CONFLICT]
 If any lecture lacks a transcript, say so for that specific lecture.
 
@@ -1857,14 +2038,16 @@ The thing that makes multi-lecture work. Produce these tables:
 
 (c) DEPENDENCIES &mdash; where one lecture assumes material from another. Columns: dependent lecture | depends on | what is assumed. Sets teaching order in Prompt 2.
 
-(d) CONVERGENCES &mdash; where multiple lectures feed into one shared downstream concept. Columns: shared outcome/concept | upstream lectures | how they combine. Use whenever multiple upstream lectures share a downstream one (e.g. T1 + T2 &rarr; complications).
+(d) CONVERGENCES &mdash; where multiple lectures feed into one shared downstream concept. Columns: shared outcome/concept | upstream lectures | how they combine.
 
-(e) PROPOSED CROSS-REFERENCES &mdash; per lecture, a list of cross-ref callouts to appear in its Notion page. Format: "L1 toggle '[source]' &rarr; &#x1F9E0; Compare/See/Builds-on: L2 '[target]' &mdash; [one-line reason]".
+(e) PROPOSED CROSS-REFERENCES &mdash; per lecture, a list of cross-ref callouts to appear in its Notion page. Format uses CLEAN LECTURE NAMES (not "L1/L2/L3") so refs survive future renames:
+    "Source lecture toggle '[source toggle title]' &rarr; &#x1F9E0; Compare/See/Builds-on: [Target Lecture Name] &rarr; [target toggle title] &mdash; [one-line reason]"
+Example: "Vascular Endothelium toggle 'Three stages of haemostasis' &rarr; &#x1F9E0; See: Valvular Disease &rarr; Why vegetations form on damaged valves &mdash; same platelet-trapping logic." NEVER use "L1 &mdash;" or "L2 &mdash;" prefixes in cross-reference text; clean names render to Notion page mentions correctly and don't go stale on rename.
 
 Step 3 &mdash; Per-lecture figure inventory.
-One inventory table per lecture. Standard columns:
+One inventory table per lecture, headed by tag. Standard columns:
 | Slide # | Description | Verdict | Caption (if PDF) | Crop box l,t,r,b (if PDF) | Teaching point |
-Caption format: "Figure L[lecture#].[figure#] &mdash; [description]". Coords from JPEGs, not memory. Figures that appear in &gt;1 lecture: list under first appearance, cross-note in others.
+Caption format: "Figure [TAG]-L[N].[figure#] &mdash; [description]" using the lecture's own tag (e.g. "Figure DM-T1.3 &mdash; Insulin signalling"). [N] is the lecture's position within its module &mdash; usually 1 unless the lecture sits inside a multi-lecture module. Coords from JPEGs, not memory. A figure that appears in more than one lecture gets listed under first appearance and cross-noted in others &mdash; do not duplicate the JPEG, just reference it.
 
 Step 4 &mdash; Per-lecture classification + bundle classification.
 
@@ -1955,73 +2138,84 @@ Surface the transcript-emphasis tags from Prompt 1 as a short examiner-intellige
 
 DELIVERABLES
 
-(1) One .md file PER LECTURE. Primary pages. Each .md self-contained. Archetype structure per lecture follows per-lecture classification from Prompt 1.
+(1) One .md file PER LECTURE. Primary pages. Each .md self-contained. Archetype structure per lecture follows per-lecture classification from Prompt 1. There is NO bundle overview .md &mdash; never produce one. Integration between lectures lives inside each lecture page via cross-reference callouts (see (2) below); a separate overview file goes stale on edit and adds revision overhead without adding exam yield. Exam SBAs are tagged to each lecture's own TILOs, so the cross-refs at point-of-use are the right surface for integration.
 
-(2) One bundle overview .md &mdash; ONLY produce if the lectures are genuinely examined as integrated material, not just because they share vocabulary or themes.
-
-Exam reality: SBA questions are tagged to the TILOs of a single lecture. Integration across lectures is examined only when the clinical workflow itself forces the integration (e.g. infertility investigations flow directly into reproductive treatments &mdash; a real exam stem on treatment selection will require you to know the investigation findings from the other lecture). In that case, an overview page pays its cognitive cost because it matches how the material is tested. When lectures merely share structure or concepts (e.g. T1DM and T2DM both have complications; heart failure and COPD both present with dyspnoea), SBAs still live inside each individual lecture's content &mdash; an overview page would add revision overhead without adding exam yield.
-
-DECISION RULE for producing the overview page:
-- YES produce an overview ONLY if: the clinical pathway forces the lectures into sequence/dependence (SEQUENTIAL), or the curriculum actually converges them into a downstream lecture where the earlier material is the foundation (SHARED OUTCOMES with a clearly-named downstream lecture that depends on upstream content).
-- NO overview page if: the bundle is just thematic similarity (PARALLEL CONTRAST of diseases that share features), a hub-and-spoke organisation (HUB-AND-SPOKE), or anything LOOSE LINK. In these cases, produce only the individual lecture pages + cross-references (see (3) below). The cross-references alone are enough; the integration overhead doesn't justify a whole page.
-
-When in doubt, skip the overview. A focused lecture page beats a thin comparator.
-
-If producing an overview: content varies by shape.
-- SEQUENTIAL &rarr; decision-spine page: end-to-end clinical logic across the lectures, cross-linking into each lecture page for detail. Examples: workup &rarr; treatment decision pathways; diagnostic algorithm &rarr; staging &rarr; management.
-- SHARED OUTCOMES &rarr; convergence page: short intro to upstream items, then shared downstream content integrated, with cross-links back to upstream pages. Only make this page if there's a named downstream lecture (e.g. "diabetes complications" downstream of T1DM + T2DM).
-
-Title format: "Bundle &mdash; [name]" (e.g. "Bundle &mdash; Infertility workup &amp; treatment").
-
-(3) Cross-references inside every lecture page.
-Each lecture .md contains &#x1F9E0; callout blocks at points where another lecture becomes relevant (NOT inside bullet lists &mdash; these are standalone block-level callouts):
+(2) Cross-references inside every lecture page (block-level &#x1F9E0; callouts).
+At points where another lecture becomes relevant, insert a standalone block (NOT inside a bullet, NOT inside a table cell):
     ### Q: [integration-style question]
-    [short answer, ending with "See also: L[N] &mdash; [toggle title]"]
-Use the proposed cross-references from Prompt 1 Step 2(e) as the base list. Add more if teaching surfaced them.
+    [short answer, ending with "See also: [Target Lecture Name] &rarr; [target toggle title]"]
+Use CLEAN LECTURE NAMES, not "L1/L2/L3". Example: "See also: Valvular Disease &rarr; Why vegetations form on damaged valves" &mdash; not "See also: L2 &mdash; Why vegetations form on damaged valves." Clean names render to Notion page mentions correctly in Prompt 4 and stay correct if the target lecture is ever renamed; "L1 &mdash;" prefixes go stale immediately.
 
-(4) One unified companion PDF for the whole bundle.
-Use the cropping pipeline: PIL, quality 90, max 1400px, fractional coords from inventory. Filename: L[lecture#]_[figure#]_[slug].jpg.
-Compile with the pdf skill into "Bundle &mdash; [name] &mdash; Companion Figures.pdf", grouped by lecture (all L1 figures first, then L2, etc.), one figure per page, captions exactly matching the .mds. One PDF for the bundle, not N PDFs.
+Use the proposed cross-references from Prompt 1 Step 2(e) as the base list. Add more if teaching surfaced them. Each lecture's archetype-end SBA block stays as-is &mdash; do NOT produce a separate cross-bundle SBA block, the per-lecture SBA blocks are sufficient.
+
+(3) Self-identifying header at the top of EACH lecture's .md.
+Right after the "How to use" blockquote and before the "Lecturer's voice" section:
+
+    **Module tag:** [TAG] &middot; **GitHub folder:** [folder-slug]
+
+Each lecture in the bundle has its own tag (locked at Prompt 1 Step 0a) and its own GitHub folder. If two lectures in the bundle share a folder (e.g. T1DM and T2DM both in `diabetes/`), each .md still has its own header line pointing at the same folder &mdash; the embed step uses the tag to disambiguate within the folder.
+
+(4) Figure references inside each .md.
+For every figure marked TEXT &rarr; reconstruct inline (mermaid, ASCII chain, comparison table).
+For every figure marked PDF &rarr; insert exactly:
+    &#x1F4CE; Figure [TAG]-L[N].[M] &mdash; [caption]
+using the lecture's own tag (e.g. "&#x1F4CE; Figure DM-T1.3 &mdash; Insulin signalling"). A figure that legitimately appears in more than one lecture: use the originating lecture's tag at every reference; do not mint a duplicate filename for the receiving lecture.
+
+(5) Extract the PDF-verdict figures as actual files.
+For each PDF-verdict figure, use PIL to crop from the rasterized JPEG using the stored fractional box coordinates, resize to max 1400px width, save as JPEG quality 90 with optimize=True (same crop() function as single-lecture Prompt 3).
+
+Filename format: [TAG]-L[N]_[FF]_[slug].jpg per lecture. [FF] zero-padded to 2 digits (e.g. DM-T1_03_insulin_signalling.jpg).
+
+(6) Per-lecture manifest files.
+Produce one [TAG]-L[N]-manifest.txt per lecture, listing every JPEG filename for that lecture, one per line. Used by the embed step for pre-flight verification.
+
+(7) Per-lecture companion PDFs.
+Compile each lecture's figures into its own "[TAG]-L[N] Companion Figures.pdf" using the pdf skill. One PDF per lecture, not one bundle-wide PDF &mdash; matches the atomic-page principle (you should be able to grab a single lecture's assets cleanly six weeks later).
 
 ARCHETYPE REMINDERS (within each lecture's .md)
 - CASCADE: pathway skeleton at top of section before toggles.
-- ATLAS: territory map, identical-template cards, cross-cutting patterns, interleaved SBA block.
+- ATLAS: territory map, identical-template cards, cross-cutting patterns, interleaved SBA block at the end.
 - MECHANISM: toggles ordered by causal logic.
 - MIXED: combine as used in teaching.
 
-CROSS-LECTURE SBAs
-Overview page carries a large interleaved SBA block forcing cross-lecture discrimination. Highest-yield for exam application &mdash; never skip for non-LOOSE-LINK bundles.
-
 FORMATTING
-Standard Notion markdown rules from design principles apply to every .md.
+Standard Notion markdown rules from design principles apply to every .md (## H2, ### Q: toggles, tables for comparisons, code blocks for ASCII, semantic icons at column one for callouts, &#x1F4CE; refs as above).
 
-Output each .md as a separate labelled code block:
-    === L1: [name].md ===
+Output each .md as a separate labelled code block in chat:
+    === [TAG]-L[N]: [Clean Lecture Name].md ===
     [content]
-    === L2: [name].md ===
+    === [TAG]-L[N]: [Clean Lecture Name].md ===
     [content]
-    === Bundle overview &mdash; [name].md ===
-    [content]
+    (one code block per lecture; no bundle overview block)
 
 DELIVERABLES &mdash; STRUCTURED OUTPUT FOLDER
 
-Create a clean sub-folder per lecture at /mnt/user-data/outputs/[Bundle-Name]/ so files group cleanly:
-
     /mnt/user-data/outputs/[Bundle-Name]/
-    ├── L1-[Lecture-Name]/
-    │   ├── L1-[Lecture-Name].md
-    │   └── figures/
-    │       ├── L1_1_[slug].jpg
-    │       └&hellip;
-    ├── L2-[Lecture-Name]/
-    │   ├── L2-[Lecture-Name].md
-    │   └── figures/
-    │       └&hellip;
-    ├── Bundle-overview.md   (if produced per the decision rule above)
-    ├── [Bundle-Name]-figures.pdf          &larr; unified companion PDF across all lectures
-    └── [Bundle-Name]-figures.zip          &larr; all JPEGs zipped (preserves filenames for mobile download)
+    ├── [TAG1]-L[N1]-[Lecture-Name]/
+    │   ├── [Clean-Lecture-Name].md                  &larr; drag into Cowork for Prompt 4
+    │   ├── [TAG1]-L[N1] Companion Figures.pdf
+    │   ├── [TAG1]-L[N1]-manifest.txt
+    │   ├── figures/                                 &larr; push to GitHub Pages [folder-slug]/
+    │   │   ├── [TAG1]-L[N1]_01_[slug].jpg
+    │   │   └&hellip;
+    │   └── [TAG1]-L[N1]-figures.zip
+    ├── [TAG2]-L[N2]-[Lecture-Name]/
+    │   └&hellip; (same structure)
+    └── [TAG3]-L[N3]-[Lecture-Name]/
+        └&hellip;
 
-Individual JPEGs sit inside each lecture's figures/ folder as separate files (Prompt 5 needs them separate for filename-prefix matching). The top-level zip bundles them all together so downloading on mobile preserves filenames. Call present_files on the bundle folder (or on each major file if presenting a folder isn't supported) at the end.</pre>
+No bundle-level files. Each lecture is its own self-contained sub-folder so individual lectures can be lifted out and treated standalone later. Call present_files on the bundle folder (or on each lecture's .md if folder presenting isn't supported) at the end. Prioritise: each lecture's .md, then figures folders, then zips, then manifests, then PDFs.
+
+NEXT STEPS BLOCK (print this verbatim at the very end of your response, after all artefacts are surfaced)
+
+    ---
+    Next steps:
+    1. For each lecture in the bundle, push the contents of its `figures/` folder into GitHub Pages at `med-figures/[folder-slug]/` (along with its manifest.txt). Lectures that share a folder push into the same folder &mdash; the tag-prefixed filenames keep them distinct.
+    2. Open Cowork; attach all lecture .mds at once; paste Prompt 4 (bundle). Note the Notion page URLs Cowork emits.
+    3. Open a Notion-MCP chat; paste Prompt 5 (bundle); attach `med-figures-listing.txt`; supply the Notion page URLs from step 2.
+    ---
+
+Do not explain the design principles in the output. Just embody them.</pre>
       <button class="expand-btn">Expand &darr;</button>
     </div>
 
@@ -2060,8 +2254,8 @@ Use Notion's native callout block type (full-width tinted background, icon slot)
 Blockquote at top (&gt; &hellip;) &rarr; grey callout with &#x1F4D8;. Horizontal rule (---) &rarr; divider. &#x1F4CE; Figure references &rarr; plain text, leave as-is.
 
 4. BUNDLE-SPECIFIC
-- Each .md = one page. If you have 3 lecture .mds, create 3 pages. If an overview .md exists, create that as a 4th page under the same parent.
-- "See also: L[N] &mdash; [toggle title]" lines render as Notion page links pointing at the corresponding lecture page in this bundle. If exact-toggle linking isn't available, link to the parent page of that lecture.
+- Each .md = one page. If you have 3 lecture .mds, create 3 pages. There is NO bundle overview .md to render &mdash; that's been deprecated.
+- Cross-references in the .md body are formatted as "See also: [Clean Lecture Name] &rarr; [target toggle title]". Convert these into Notion page MENTIONS (not inline links) where possible &mdash; mentions reference page IDs and so survive future renames of the target lecture, whereas inline links with hand-typed display text would go stale. If a target page can't be located by name (e.g. it hasn't been rendered yet, or sits under a different parent), leave the text as-is &mdash; the next render pass over the bundle will resolve it, or a Cross-reference sweep can fix it later.
 
 5. DUPLICATES &amp; MULTI-PART LECTURES
 - If a page with the clean title already exists under the parent, APPEND this .md's content at the bottom of the existing page after a divider (---). Do not overwrite or duplicate.
@@ -2072,38 +2266,75 @@ Blockquote at top (&gt; &hellip;) &rarr; grey callout with &#x1F4D8;. Horizontal
       <button class="expand-btn">Expand &darr;</button>
     </div>
 
-    <h3 id="bp5">Prompt 5 (bundle) &mdash; Embed figures into all Notion pages (Cowork)</h3>
-    <p class="section-subtitle">Run in Cowork <em>after</em> Prompt 4 has created all the Notion pages for the bundle. Point Cowork at the folder of labelled JPEGs (covers all lectures in the bundle).</p>
+    <h3 id="bp5">Prompt 5 (bundle) &mdash; Embed figures into all Notion pages via GitHub Pages</h3>
+    <p class="section-subtitle">Run in a fresh Notion-MCP chat <em>after</em> Prompt 4 has created all the Notion pages for the bundle. Attach <code>med-figures-listing.txt</code> and supply the list of Notion page URLs.</p>
     <div class="prompt-block collapsed">
       <button class="copy-btn" data-target="bp5-text">Copy</button>
-      <pre id="bp5-text">I have a bundle of linked Notion pages (one per lecture, plus an overview page) and a folder of labelled JPEG figures covering all lectures in the bundle. For every &#x1F4CE; Figure reference across ALL pages in the bundle, upload the matching image as an image block immediately below that line, without removing the &#x1F4CE; reference.
+      <pre id="bp5-text">Embed figures across all Notion pages in this bundle using GitHub-Pages-hosted JPEGs.
 
-MATCHING RULE
-Process every page in the bundle. For each line matching "&#x1F4CE; Figure L[N].[M] &mdash; [caption]", find the JPEG in the folder whose filename starts with L[N]_[M]_ (lecture-prefixed, e.g. L2_3_insulin_resistance.jpg matches &#x1F4CE; Figure L2.3). Upload that JPEG as an image block directly below the &#x1F4CE; line. Do NOT delete or modify the &#x1F4CE; line itself.
+INPUTS
+- Notion page URLs (one per lecture in the bundle, no overview &mdash; bundles don't produce overview pages):
+  L1: [PASTE]
+  L2: [PASTE]
+  L3: [PASTE]
+- Attached: med-figures-listing.txt (authoritative listing of every folder + filename in my GitHub Pages repo at https://kenp4ki.github.io/med-figures/)
 
-SCOPE
-- Process all lecture pages AND the overview page. The overview may cross-reference figures from multiple lectures &mdash; upload whichever matches by L[N]_[M] prefix.
-- A single JPEG may legitimately be referenced from more than one page (e.g. a shared pathophysiology diagram referenced from both an upstream lecture and the convergence page). Upload it to each page where the &#x1F4CE; reference appears.
+CORE TASK
+For every "&#x1F4CE; Figure [TAG]-L[N].[M] &mdash; caption" reference across all bundle pages, append an image embed line directly below it:
+    ![caption](https://kenp4ki.github.io/med-figures/[folder]/[filename].jpg)
 
-PLACEMENT DETAIL
-- If the &#x1F4CE; line is inside a toggle block, the image goes inside the same toggle, directly below the &#x1F4CE; line.
-- If the &#x1F4CE; line is at top level, the image goes directly below it at top level.
-- Preserve all surrounding content and structure exactly.
+Do NOT remove the &#x1F4CE; line. Match filenames against the attached listing. NEVER guess; log unresolved refs and skip.
 
-IMAGE CAPTIONS
-Use the text after the em-dash in the &#x1F4CE; line as the Notion image caption. If the platform doesn't cleanly support image captions, skip &mdash; the &#x1F4CE; line already carries the caption.
+PROCESSING ORDER
+Process pages sequentially, one at a time. Don't parallelise. Don't hang &mdash; once a page is done, move to the next.
 
-ERROR HANDLING
-- If a &#x1F4CE; reference has no matching JPEG, leave the &#x1F4CE; line in place and continue. Log the unmatched ID for the final report.
-- If a JPEG has no matching &#x1F4CE; reference anywhere in the bundle, ignore it.
-- Notion upload rejections: retry once, then log and continue.
+PER-PAGE PRE-FLIGHT
+For each page in turn:
+1. Fetch with notion-fetch.
+2. Read self-identifying header: "**Module tag:** [TAG] &middot; **GitHub folder:** [folder-slug]". If missing (legacy page), infer folder from page-to-folder mapping in the single-lecture Prompt 5; confirm with me before proceeding.
+3. Walk every &#x1F4CE; reference. Resolve each against the listing. Build a (reference, URL or "MISSING") table for that page.
+4. Report the table BEFORE updating that page. If any are MISSING, ask whether to skip them or wait.
+5. Only after I confirm do you update that page.
+
+CROSS-LECTURE FIGURE REFERENCES
+A figure that legitimately appears on more than one page in the bundle (e.g. a shared pathophysiology diagram referenced from both an upstream lecture and a downstream one): the originating lecture's tag is used in every reference, so the same URL appears under each &#x1F4CE; reference on each page where it occurs. No special handling required &mdash; the matching rule does the right thing automatically.
+
+MATCHING &mdash; TAGGED (current convention)
+Reference "&#x1F4CE; Figure DM-T1.3 &mdash; Insulin signalling" &rarr; filename DM-T1_03_insulin_signalling.jpg. Filename pattern: [TAG]-L[N]_[FF]_[slug].jpg with FF zero-padded.
+
+MATCHING &mdash; LEGACY UNTAGGED
+Older bundle pages may use "&#x1F4CE; Figure L[N].[M]" (no tag). For these, filename pattern is L[N]_[M]_[slug].jpg in a SINGLE shared folder for the whole bundle (e.g. /diabetes/, /audio-vestibular/). Folder is inferred from the bundle's topic via the page-to-folder mapping in single-lecture Prompt 5.
+
+URL CONSTRUCTION
+    https://kenp4ki.github.io/med-figures/[folder]/[filename].jpg
+Folders requiring %20 (legacy, being phased out): adrenal, athero, calcium, dementia.
+
+UPDATE BEHAVIOUR
+- One notion-update-page call per page with content_updates array.
+- Each entry: {old_str = exact &#x1F4CE; line as it appears on the page, new_str = same line + "\n\n" + matching tab indent + "![alt](URL)"}.
+- Inside single toggle: prefix with "\t". Nested toggle: "\t\t". Mirror the &#x1F4CE; line's indent.
+- ECG / ABG legacy pages: preserve **bold** caption markup verbatim in old_str.
+- Multi-figure ("&#x1F4CE; Figures L1.4 &amp; L1.5 &mdash; ..."): stack image embeds.
+
+IDEMPOTENCE
+Skip references already followed by an image embed.
+
+CONTEXT-LIMIT SELF-MONITORING
+Soft check &mdash; every 2 pages completed:
+- Are tool results being truncated (`[Older tool result cleared...]`)?
+- Have you made &gt;40 tool calls this session?
+- Does fetching/updating feel sluggish?
+If any are true, finish the current page cleanly, output a handoff report (pages completed / skipped / remaining IDs), and tell me to start a new chat with this prompt + the listing + the remaining page URLs.
+
+Hard stop &mdash; stop immediately:
+- Multiple back-to-back `[Older tool result cleared]` messages
+- &gt;60 tool calls in the session
+- Any tool failure that looks context-related
 
 DELIVERABLE
-One report at the end, organised by page:
-- For each page in the bundle: figures uploaded / unmatched / failed
-- Orphan JPEGs (no &#x1F4CE; anywhere in bundle)
+After each page is updated, print a one-line confirmation: "&#x2705; [Page name] &mdash; N figures embedded, M skipped". At the end, a short summary of any unresolved references across the bundle.
 
-Do not restructure any page. Do not add page properties, comments, or database entries. The only change is adding image blocks below existing &#x1F4CE; lines.</pre>
+No restructuring. No page-property changes. The only change is appending image embeds below existing &#x1F4CE; lines.</pre>
       <button class="expand-btn">Expand &darr;</button>
     </div>
   </div>
@@ -2175,6 +2406,109 @@ Do not change any factual content. This is a structural rebuild + missing-assets
     <button class="expand-btn">Expand &darr;</button>
   </div>
 
+  <h3 id="handoff">Handoff briefing &mdash; produce a clean restart point before context fills</h3>
+  <p class="section-subtitle">Use when a long working chat is starting to drift, when Claude has been editing the same artefact across many turns, or when you can feel the conversation getting unwieldy. You can trigger by typing <strong>&ldquo;handoff&rdquo;</strong>; Claude will also offer one proactively if it notices its own tool results being cleared, or after several rounds of design changes have stacked up. Produces a one-screen briefing you paste into a fresh chat alongside re-uploading the core files. The new chat then continues seamlessly from the resumption point, with all decisions made in the prior chat carried forward as deltas, while the static system itself comes from the re-uploaded files. Mirrors the context-monitoring pattern in Prompt 5 so the failsafe fires <em>before</em> quality degrades, not after.</p>
+  <div class="prompt-block collapsed">
+    <button class="copy-btn" data-target="handoff-text">Copy</button>
+    <pre id="handoff-text">Produce a handoff briefing for me to paste into a fresh chat. Keep it crisp &mdash; one screen if possible. The new chat will inherit the static system from re-uploaded core files; this briefing only carries the deltas.
+
+OUTPUT FORMAT (produce this exact structure)
+
+    ---
+    HANDOFF BRIEFING &mdash; [one-line description of what we were working on]
+    ---
+
+    DECISIONS LOCKED IN THIS CHAT (apply during continued work):
+    [Numbered list. Each decision: one sentence stating WHAT was decided, plus a brief WHY if non-obvious. Include any concrete values agreed: filename conventions, format strings, field names, prompt rewrites, etc. If a master table or seed list was produced, include it verbatim &mdash; it's small and saves the next chat from re-deriving it.]
+
+    EDITS COMPLETED ON [target file paths] (state HOW COMPLETE):
+    [Bulleted list of what was actually changed in workspace files this chat. Be honest about partial state &mdash; if half the file is updated and half isn't, say so explicitly.]
+
+    EDITS STILL PENDING:
+    [Bulleted list of what remains. Order by what should be done first. Flag anything large or load-bearing.]
+
+    RESUMPTION INSTRUCTION:
+    [One short paragraph. Tells the next Claude where to start, what reference patterns to mirror, and any sequencing constraint &mdash; e.g. "do X first so we have a viewable file at every step in case the limit hits again."]
+
+    FILES TO RE-ATTACH IN THE NEXT CHAT:
+    [Bulleted list. Always include the system's core files (e.g. index.html, design-decisions.md, any reference documents). Do NOT include the half-edited working file unless it's actually useful to inherit; partial-edit state is usually more confusing than starting fresh.]
+
+    ---
+    STARTER PROMPT (paste this into the fresh chat verbatim):
+
+    I'm continuing work from a previous chat that hit a tool-use ceiling / saved a clean restart point. Re-uploading the core files. Read them &mdash; they're the system. Below is what was decided in the previous chat that hasn't been baked into them yet, plus the resumption point.
+    [paste the DECISIONS LOCKED, EDITS COMPLETED, EDITS STILL PENDING, and RESUMPTION INSTRUCTION sections from above, verbatim, here]
+    ---
+
+NOTES ON COMPOSING THE BRIEFING
+
+- Decisions section is the load-bearing one. If a decision was reached but isn't captured here, the next chat will re-litigate it. Include enough detail that the next Claude doesn't need to ask follow-up questions.
+- Edits-completed should match what's actually on disk. View the file briefly before producing the briefing if you're unsure of the current state.
+- If multiple artefacts were being produced (e.g. updated index.html + new design-decisions.md + a YAML), list each one's status separately.
+- Don't try to recreate the system in the briefing. The core files do that. The briefing is the diff, not the snapshot.
+- If something was discussed but not concluded, put it under "OPEN QUESTIONS" between EDITS STILL PENDING and RESUMPTION INSTRUCTION. Don't pretend a decision was reached when it wasn't.
+
+WHEN TO PROACTIVELY OFFER A HANDOFF (without being asked)
+
+- You notice `[Older tool result cleared]` markers appearing in your context.
+- You've made &gt;40 substantive tool calls in this chat (str_replace edits, bash commands, etc.) and are mid-task.
+- The user is iterating on the same artefact across many turns and the latest turn shows you forgetting earlier decisions or asking questions you've already had answered.
+- A complex design discussion has produced 3+ decisions that haven't yet been written into the core files.
+
+In any of these cases, surface a single line at the top of your reply: "Quick check &mdash; we're getting deep into this. Want me to produce a handoff briefing now so the next chat picks up cleanly?" Don't stall waiting for permission &mdash; if the user says no, continue working; if they say yes, produce the briefing immediately.</pre>
+    <button class="expand-btn">Expand &darr;</button>
+  </div>
+
+  <h3 id="xref-sweep">Cross-reference sweep &mdash; rewrite stale lecture-name references on existing Notion pages</h3>
+  <p class="section-subtitle">Use after a Notion rename pass (e.g. the original "L1 &mdash; SHD GOL" titles being shortened to "SHD GOL"; lectures being moved into module-themed parents). Many lecture pages contain text references to other lectures that read as "See also: L2 &mdash; [topic]" in plain prose. Clickable Notion links remain functional after a rename because they use page IDs, but the displayed text goes stale. This prompt walks every page under a Notion parent, finds stale-style refs (<code>L1 &mdash;</code>, <code>L2 &mdash;</code>, <code>Lecture N &mdash;</code>), and rewrites them using the linked page&rsquo;s current title. Idempotent. Safe to re-run. Pre-flight reports the substitution table before any update lands.</p>
+  <div class="prompt-block collapsed">
+    <button class="copy-btn" data-target="xref-text">Copy</button>
+    <pre id="xref-text">Sweep every page under the supplied Notion parent and rewrite stale cross-reference text using the current titles of the target lectures.
+
+INPUTS
+- Parent page URL: [PASTE]
+- (Optional) Specific page IDs to limit the sweep to a subset: [paste comma-separated, or leave blank to sweep all subpages under the parent]
+
+CORE TASK
+Find every text reference of the form "L[N] &mdash; [text]" or "Lecture N &mdash; [text]" appearing in paragraph or italic text on subpages under the parent. For each, determine the target lecture and rewrite the text using the target's current title.
+
+PRE-FLIGHT (run before any updates)
+1. Walk every page under the parent. For each, identify candidate stale refs.
+2. For each candidate, classify:
+   (a) STALE WITH LIVE LINK &mdash; the ref is wrapped in or adjacent to a clickable Notion page link. Read the link target's current page title. The new text becomes "[Current Title] &rarr; [original section detail if present]" (e.g. "L2 &mdash; Why vegetations form on damaged valves" with link to Valvular Disease becomes "Valvular Disease &rarr; Why vegetations form on damaged valves").
+   (b) STALE WITHOUT LINK &mdash; plain text reference with no linkable target. Leave as-is and flag in the report &mdash; manual judgement needed.
+   (c) ALREADY CLEAN &mdash; ref doesn't match the stale pattern. Skip silently.
+3. Build a substitution table: page ID, page title, original ref text, classification, proposed new text.
+4. Print the table BEFORE making any updates. If anything looks wrong, I'll tell you to fix or skip.
+5. Wait for my confirmation. Only then proceed.
+
+UPDATE BEHAVIOUR
+- One notion-update-page call per page, with content_updates array containing all replacements for that page.
+- Each entry: {old_str = exact stale ref including any surrounding markup (italic asterisks, em-dashes), new_str = clean rewrite preserving the same surrounding markup}.
+- Where the old text was inside a clickable link, KEEP the link's underlying page reference intact &mdash; only the displayed text changes. If the Notion MCP can convert an inline link with stale text into a proper page mention (where display text auto-syncs with target title forever), prefer that over a static rewrite. Mention &gt; static rewrite, because mention is rename-safe.
+
+IDEMPOTENCE
+A clean ref ("Valvular Disease &rarr; ...") that already matches the target's current title is a no-op. Re-running the sweep doesn't double-rewrite anything.
+
+SCOPE LIMITS
+- Process pages sequentially, not in parallel.
+- Don't rewrite figure captions (&#x1F4CE; Figure L1.3 lines &mdash; those are figure refs, not lecture refs, and have a separate matching scheme).
+- Don't rewrite refs inside code blocks &mdash; those may be intentional.
+- Don't rewrite the .md's own self-identifying header &mdash; the [TAG] / folder line is structural, not a cross-ref.
+
+CONTEXT-LIMIT SELF-MONITORING
+Same as Prompt 5: soft check every 2 pages, hard stop on tool-result clearing or &gt;60 tool calls. If hit, output a handoff (pages swept / pages skipped / pages remaining) and tell me to start fresh.
+
+DELIVERABLE
+After updates land, print a compact summary:
+- Pages swept: count
+- Refs rewritten (with live link): count
+- Refs flagged for manual review (no link): list of (page, original text)
+- Refs already clean: count
+- Any failures with reason</pre>
+    <button class="expand-btn">Expand &darr;</button>
+  </div>
+
   <h3 id="gap-remediation">Gap remediation &mdash; targeted re-teach of Qs you couldn&rsquo;t answer</h3>
   <p class="section-subtitle">Use after you&rsquo;ve practised the Notion page and identified specific toggles you couldn&rsquo;t answer. Paste back into the same chat (or a fresh chat with the <code>.md</code> attached), replacing the placeholder with your list of failed Qs. Turns the static revision page into a responsive tutor focused on your actual gaps &mdash; higher yield than re-reading the whole page for the third time.</p>
   <div class="prompt-block collapsed">
@@ -2234,44 +2568,43 @@ Do NOT modify the page. This is read-only. I'll decide what to fix.</pre>
     <button class="expand-btn">Expand &darr;</button>
   </div>
 
-  <h3 id="batch-figures">Batch figure embed &mdash; embed figures across many Notion pages at once</h3>
-  <p class="section-subtitle">Use when you have one folder of labelled JPEGs covering many lectures (e.g. a whole module) and you want Cowork to embed figures across every page under a parent, rather than running Prompt 5 once per lecture. Filename-prefix matching handles the routing: <code>L3_2_substantia_nigra.jpg</code> goes under <code>&#x1F4CE; Figure L3.2</code> on whichever page has that reference. One invocation, walks every subpage, reports unmatched at the end.</p>
+  <h3 id="batch-figures">Batch figure embed &mdash; embed figures across many Notion pages at once via GitHub Pages</h3>
+  <p class="section-subtitle">Use when you want to embed figures across many lectures in one shot (e.g. a whole module's worth of pages) rather than running Prompt 5 page-by-page. Same matching machinery as Prompt 5 but iterates across many page URLs, with the listing as the single source of truth for filenames. One invocation walks every supplied page, reports the resolution table per page before any update lands, then embeds. Idempotent.</p>
   <div class="prompt-block collapsed">
     <button class="copy-btn" data-target="batch-figures-text">Copy</button>
-    <pre id="batch-figures-text">I'm giving you a single folder containing labelled JPEG figures for multiple lectures. Every filename follows the pattern L[N]_[M]_[slug].jpg where N is the lecture number prefix and M is the figure number. Process every page in this Notion parent and embed figures where they match.
+    <pre id="batch-figures-text">Embed figures across many Notion pages in one session, using GitHub-Pages-hosted JPEGs.
 
-Parent: [PASTE NOTION URL &mdash; e.g. the Endocrinology module page]
-JPEG folder: [PASTE LOCAL PATH]
+INPUTS
+- Notion page URLs (one per page, in order):
+  [PASTE LIST]
+- Attached: med-figures-listing.txt
+
+CORE TASK
+For every page supplied, walk every "&#x1F4CE; Figure ..." reference, resolve filename via the listing, and append "![caption](URL)" directly below it. Same matching logic as the standard single-page Prompt 5 (tagged convention current; legacy untagged refs handled via the page-to-folder mapping in single-lecture Prompt 5).
 
 PROCESSING
-- Walk every subpage under the parent (one per lecture).
-- For each page, find every line matching "&#x1F4CE; Figure L[N].[M] &mdash; [caption]".
-- For each reference, find the JPEG in the folder whose filename starts with L[N]_[M]_ (e.g. L3_2_substantia_nigra.jpg matches &#x1F4CE; Figure L3.2).
-- Upload that JPEG as an image block directly below the &#x1F4CE; line.
-- Leave the &#x1F4CE; line itself unchanged &mdash; it stays as a caption marker.
-
-ONE AT A TIME
-- Process pages sequentially, not in parallel.
-- Confirm each upload internally; don't report per-page.
-- Don't hang &mdash; once an image uploads, move to the next.
+- Sequentially, one page at a time. Don't parallelise.
+- For each page: pre-flight (read self-identifying header or infer folder, walk refs, resolve, build (ref, URL or "MISSING") table, print table, ask if any are MISSING, proceed only on confirmation), then update with one notion-update-page call carrying all replacements for that page.
+- After each page: one-line confirmation ("&#x2705; [page name] &mdash; N embedded, M skipped"), then move to the next.
 
 IDEMPOTENT
-- If running on a partially-done page, skip references that already have an image block directly below them. Don't re-upload.
-- Same logic across re-runs &mdash; this prompt should be safe to run twice without creating duplicates.
+Skip refs already followed by an image embed. Safe to re-run on partially-done pages.
 
 DO NOT
 - Create new pages.
-- Modify any block other than adding images under &#x1F4CE; lines.
-- Upload a JPEG that has no matching &#x1F4CE; reference anywhere under the parent.
+- Modify any block other than appending image embeds under existing &#x1F4CE; lines.
+- Embed a JPEG that doesn't appear in the attached listing &mdash; never guess filenames.
 
-REPORT AT THE END ONLY
+CONTEXT-LIMIT SELF-MONITORING
+Soft check every 2 pages: tool-result truncation, &gt;40 tool calls, sluggish fetches &mdash; if any, finish current page cleanly, output a handoff (pages completed / skipped / remaining URLs), and tell me to start fresh.
+Hard stop: back-to-back `[Older tool result cleared]`, &gt;60 tool calls, context-related tool failure.
+
+DELIVERABLE
+At the end, a summary across all pages:
 - Pages processed: count
-- Images uploaded successfully: count
-- &#x1F4CE; references with no matching JPEG: list (by page, by reference)
-- JPEGs in the folder with no matching &#x1F4CE; anywhere: list
-- Upload failures: list with reason
-
-Do not summarise any page content. This is a routing + upload job, not a content audit.</pre>
+- Images embedded successfully: count
+- &#x1F4CE; references unresolved (with page, reference): list
+- Per-page failures: list with reason</pre>
     <button class="expand-btn">Expand &darr;</button>
   </div>
 
@@ -2282,9 +2615,9 @@ Do not summarise any page content. This is a routing + upload job, not a content
   <details class="fieldnote">
     <summary>How figures actually flow through the system</summary>
     <div class="fieldnote-body">
-    <p>Claude produces the figures for you &mdash; no manual screenshotting. The pipeline runs across two prompts:</p>
-    <p><strong>Prompt 1</strong> &rarr; Claude rasterizes every slide to a JPEG at 200 DPI using <code>libreoffice</code> + <code>pdftoppm</code>, then <em>views</em> each image. This sharpens the audit (text baked into images, yellow callouts, and layout cues get captured properly) and produces the figure inventory, which includes fractional crop-box coordinates for every PDF-verdict figure.<br><strong>Prompt 3</strong> &rarr; Claude uses those crop coordinates to extract each figure (PIL, quality 90, max 1400px), then compiles them into a <em>Lecture X &mdash; Companion Figures.pdf</em> via the pdf skill. You get the <code>.md</code> and the PDF as final deliverables, ready to use.</p>
-    <p>Your job is just to sanity-check the figure inventory in Prompt 1 &mdash; if Claude flagged something as SKIP that you wanted in the PDF (or vice versa), say so before moving to Prompt 2.</p>
+    <p>Claude produces every figure for you &mdash; no manual screenshotting. The pipeline runs across two prompts and one external CDN:</p>
+    <p><strong>Prompt 1</strong> &rarr; Claude rasterizes every slide to a JPEG at 200 DPI using <code>libreoffice</code> + <code>pdftoppm</code>, views each image, and produces the figure inventory with fractional crop-box coordinates for every PDF-verdict figure. The lecture is also assigned a <em>module tag</em> here (e.g. <code>ADR</code>, <code>DM</code>) which threads through every artefact downstream.<br><strong>Prompt 3</strong> &rarr; Claude crops each figure with PIL (quality 90, max 1400px), names it <code>[TAG]-L[N]_[FF]_[slug].jpg</code>, writes a per-lecture manifest, and compiles the lecture's companion PDF. You then push the JPEGs and manifest to the <code>med-figures</code> GitHub Pages repo.<br><strong>Prompt 5</strong> &rarr; runs in a separate Notion-MCP chat after Cowork has rendered the page (Prompt 4). Reads the <code>.md</code>'s self-identifying header to know which folder to match against, validates every figure reference against the attached <code>med-figures-listing.txt</code>, and appends <code>![alt](URL)</code> markdown image embeds below each <code>&#x1F4CE; Figure</code> line. Pre-flight verification means broken refs are caught before any update lands, not after.</p>
+    <p>Your job is just to sanity-check the figure inventory in Prompt 1 (SKIP vs PDF verdicts) and to push the JPEGs to GitHub between Prompt 3 and Prompt 5.</p>
     </div>
   </details>
 
@@ -2326,7 +2659,40 @@ Do not summarise any page content. This is a routing + upload job, not a content
   <details class="fieldnote">
     <summary>Prompt 5: figures in the Notion page itself</summary>
     <div class="fieldnote-body">
-    <p>Prompt 5 is optional but worth running. After Cowork has built the Notion page (Prompt 4), Prompt 5 walks through every <code>&#x1F4CE; Figure LX.Y</code> reference in the page and uploads the matching JPEG as an image block directly below it, keeping the <code>&#x1F4CE;</code> reference as a visible caption. Match is by filename prefix &mdash; <code>L3_2_substantia_nigra.jpg</code> slots under <code>&#x1F4CE; Figure L3.2</code>. The companion PDF from Prompt 3 still exists as a fallback in case an upload fails, and as a printable reference for offline revision. You can also run Prompt 5 later &mdash; the filename convention and the <code>&#x1F4CE;</code> references mean the matching still works hours or days after the original chat closes.</p>
+    <p>Prompt 5 lives in a separate Notion-MCP chat after Cowork has rendered the page. It reads the page's self-identifying header (<em>Module tag: ADR &middot; GitHub folder: adrenal</em>) to know which folder of JPEGs to match against, walks every <code>&#x1F4CE; Figure ADR-L1.3</code> reference, looks up the matching filename in the attached <code>med-figures-listing.txt</code>, and appends <code>![alt](URL)</code> directly below each &#x1F4CE; line &mdash; URL pointing at <code>kenp4ki.github.io/med-figures/[folder]/[filename].jpg</code>. The &#x1F4CE; line stays visible above the image as the caption.</p>
+    <p>Pre-flight reports the resolution table for the page before any update lands, so missing JPEGs (a forgotten GitHub push, a typo) are caught up front, not after a half-broken page exists. Idempotent: safe to re-run on a partially-embedded page.</p>
+    <p>The companion PDF from Prompt 3 still exists as an offline reference and a fallback if a URL ever 404s. Legacy untagged refs (<code>&#x1F4CE; Figure L3.2</code>, no tag prefix) on older pages are handled by the page-to-folder mapping baked into Prompt 5 &mdash; nothing migrates automatically; legacy stays legacy.</p>
+    </div>
+  </details>
+
+  <details class="fieldnote">
+    <summary>Module tags &mdash; the failsafe layer</summary>
+    <div class="fieldnote-body">
+    <p>Every lecture gets a 3&ndash;7 char all-caps module tag at Prompt 1 (e.g. <code>ADR</code>, <code>DM-T1</code>, <code>VIS</code>). The tag is the lecture's stable identity across every artefact: it's prefixed onto every JPEG filename, into every <code>&#x1F4CE;</code> figure reference inside the <code>.md</code>, into the companion-PDF name, the manifest filename, and the self-identifying header line at the top of the <code>.md</code> (<em>Module tag: ADR &middot; GitHub folder: adrenal</em>).</p>
+    <p>The reason it exists is failsafe layering. Folder boundaries on GitHub are the primary mechanism that keeps figures correctly routed. The tag prefix is a secondary mechanism that makes filename-collision impossible even if folder boundaries get crossed (e.g. multiple lectures sharing one folder, or a <code>.md</code> uploaded out of context). The self-identifying header is a tertiary mechanism: it lets the embed step <em>verify</em> a page is matched against the right folder before any update lands. Three independent layers, so no single failure mode produces a wrong-image embed.</p>
+    <p>Tags live in a master table in <code>design-decisions.md</code>. New lectures look up their module's tag there; if the module isn't listed yet, Claude proposes one at Prompt 1 and you add the row when you next edit the file.</p>
+    </div>
+  </details>
+
+  <details class="fieldnote">
+    <summary>Handoff briefing &mdash; for when a chat is getting full</summary>
+    <div class="fieldnote-body">
+    <p>Long working chats degrade quietly. Tool results get cleared, attention to earlier instructions weakens, decisions made hours earlier start being re-litigated. The <em>Handoff briefing</em> diagnostic is the failsafe: triggered by typing &ldquo;handoff&rdquo; or surfaced by Claude proactively when it notices its own context filling up, it produces a one-screen briefing &mdash; decisions locked, edits completed, edits pending, resumption instruction, and a starter prompt &mdash; that you paste into a fresh chat alongside re-uploading the core files. The new chat picks up cleanly from the resumption point. The static system itself comes from the re-uploaded files; the briefing only carries the deltas.</p>
+    <p>If Claude offers a handoff and you decline, that's fine &mdash; just be aware that the next 20 turns will likely be lower-quality than the previous 20 were. Better to take the brief restart cost than to end up with a half-edited artefact and a Claude that's forgotten why.</p>
+    </div>
+  </details>
+
+  <details class="fieldnote">
+    <summary>No bundle overview pages &mdash; ever</summary>
+    <div class="fieldnote-body">
+    <p>A bundle of linked lectures (T1DM + T2DM + complications, infertility + reproductive treatments, asthma + COPD) produces N Notion pages, never N+1. There is no &ldquo;bundle overview&rdquo; <code>.md</code>. Integration between lectures lives <em>inside each lecture page</em> via cross-reference callouts at the points where the connection actually matters. Reasoning: an overview file goes stale the moment any constituent lecture is edited; it duplicates content; it breaks the &ldquo;land on T2DM six weeks later and just see T2DM&rdquo; experience because there's now a separate file to track; and exam SBAs are tagged to individual lectures' TILOs anyway, so an overview adds revision overhead without adding exam yield. Cross-references at point-of-use are higher signal than a separate doc summarising integration in the abstract.</p>
+    </div>
+  </details>
+
+  <details class="fieldnote">
+    <summary>Cross-reference text uses clean lecture names</summary>
+    <div class="fieldnote-body">
+    <p>Inside any <code>.md</code>, cross-references between lectures are written as &ldquo;See also: <em>Valvular Disease &rarr; Why vegetations form on damaged valves</em>&rdquo; &mdash; clean lecture name + section detail. They are NOT written as &ldquo;See also: L2 &mdash; ...&rdquo; because that goes stale the moment a lecture is renamed. Cowork (Prompt 4) is asked to render these as Notion page <em>mentions</em> (which reference page IDs internally and stay correct through future renames) rather than inline links with hand-typed display text. If you've done a major Notion rename pass and old pages still have <code>L1 &mdash;</code> / <code>L2 &mdash;</code> stale text, run the Cross-reference sweep diagnostic to clean them up.</p>
     </div>
   </details>
 
@@ -2338,16 +2704,18 @@ Do not summarise any page content. This is a routing + upload job, not a content
   </details>
 
   <details class="fieldnote">
-    <summary>Overview pages are the exception, not the rule</summary>
+    <summary>Continuous teaching vs. slow mode</summary>
     <div class="fieldnote-body">
-    <p>A bundle doesn&rsquo;t automatically earn an overview page. Exam SBAs are tagged to individual lectures&rsquo; TILOs, so integration is only examined when the <em>clinical workflow itself</em> forces it &mdash; e.g. infertility investigations flowing into reproductive treatments, or diabetes lectures converging on a named complications lecture. For bundles that are just thematic similarity (T1 vs T2; asthma vs COPD; UC vs Crohn&rsquo;s), the individual lecture pages plus cross-reference callouts inside each are sufficient. A whole overview page in those cases adds revision overhead without adding exam yield. Default: no overview. Exception: genuine clinical-workflow integration or named downstream convergence.</p>
+    <p>Claude now teaches continuously by default &mdash; no "shall I continue?" pauses between sections of a single lecture. The system-level tool-use limit (Claude.ai's "Continue" button) will still sometimes interrupt very long outputs; just tap Continue and Claude resumes. For bundle mode, there's one brief pause between lectures so you can digest one before the next lands, but no pauses within a lecture. If you want the older behaviour where Claude stops after every chunk, open Prompt 2 with <strong>&ldquo;slow mode&rdquo;</strong> or <strong>&ldquo;pause between sections&rdquo;</strong>.</p>
     </div>
   </details>
 
   <details class="fieldnote">
-    <summary>Continuous teaching vs. slow mode</summary>
+    <summary>Notion structure &mdash; Neo-BRS, modules, and Pharm</summary>
     <div class="fieldnote-body">
-    <p>Claude now teaches continuously by default &mdash; no "shall I continue?" pauses between sections of a single lecture. The system-level tool-use limit (Claude.ai's "Continue" button) will still sometimes interrupt very long outputs; just tap Continue and Claude resumes. For bundle mode, there's one brief pause between lectures so you can digest one before the next lands, but no pauses within a lecture. If you want the older behaviour where Claude stops after every chunk, open Prompt 2 with <strong>&ldquo;slow mode&rdquo;</strong> or <strong>&ldquo;pause between sections&rdquo;</strong>.</p>
+    <p>Lecture pages live under a parent called <code>Neo-BRS</code>, organised into 8 module-themed parent pages (Endocrinology, Cardiovascular &amp; Respiratory, etc.). For each lecture, Cowork (Prompt 4) creates the page under the relevant module parent &mdash; you supply the URL of that parent in the prompt. Page titles are clean: just the lecture name, no <code>L1 &mdash;</code> prefix, no <code>(part 1 of 2)</code> disambiguator. Multi-part lectures merge onto a single page via the append-on-duplicate logic.</p>
+    <p>Two structural exceptions worth knowing about. <strong>Pharm</strong> is its own container of nested pharmacology lectures sitting at <code>duper</code> level rather than under Neo-BRS &mdash; it doesn't fit any of the 8 modules cleanly. Could be moved into Neo-BRS as a 9th module later if you decide. <strong>Psychiatry</strong> was originally similar but has been moved into Neo-BRS as the 8th module slot, replacing an empty placeholder page that you removed manually (the Notion MCP has no delete operation, so deletes always need a manual click).</p>
+    <p>If you do another rename pass on lecture titles in Notion, run the Cross-reference sweep diagnostic afterwards &mdash; clickable Notion links remain functional through renames (they reference page IDs, not titles), but any plain-text &ldquo;L2 &mdash; ...&rdquo; mentions left in old pages will read as stale until the sweep rewrites them with the lectures' current titles. Going forward, all new <code>.md</code>s use clean lecture names in cross-references rather than <code>L1/L2/L3</code> labels, so this becomes a one-time clean-up rather than recurring tax.</p>
     </div>
   </details>
 
