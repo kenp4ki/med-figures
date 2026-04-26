@@ -1064,7 +1064,7 @@ Clear, direct, intelligent. No fluff. No vague summaries. No oversimplification 
 
 2. Chunking matched to element interactivity. 3&ndash;5 related facts per toggle as default, up to 7 for tightly-linked conceptual chunks. Hard ceiling: 6 short bullets OR 3 short sentences OR one compact list/ladder per answer. If an answer would exceed this, split the question &mdash; do not inflate the toggle.
 
-3. Dual coding. Pair verbal content with visual/spatial structure &mdash; Notion tables for comparisons, indentation for hierarchy, text-reconstructed diagrams (mermaid or ASCII in code blocks) where flow/pathway matters. For genuinely visual figures (anatomy photos, graphs, complex diagrams, spatial scans), flag with &#x1F4CE; Figure references to a companion PDF rather than forcing inline.
+3. Dual coding. Pair verbal content with visual/spatial structure &mdash; Notion tables for comparisons, indentation for hierarchy, text-reconstructed diagrams (ASCII flow in a fenced code block tagged <code>javascript</code> for chains/cascades/layered structures; Mermaid only for small branching diagrams &le;5 nodes with short labels) where flow/pathway matters. The <code>javascript</code> language tag is intentional &mdash; Notion's JS syntax highlighter colours parentheses and keywords, which makes ASCII chains visually pop, and the code block scrolls horizontally on mobile so wide chains don't break page layout. For genuinely visual figures (anatomy photos, graphs, complex diagrams, spatial scans), flag with &#x1F4CE; Figure references to a companion PDF rather than forcing inline.
 
 TABLE GATE: before using a table, verify it has at least 3 columns AND at least 3 rows of genuinely differentiated content. A 4-column table where three columns hold arrows or single symbols is not a table; it's a list with extra scrolling &mdash; convert to a compact bulleted ladder or prose. A 2-column "feature / value" table is a bulleted list pretending to be a table &mdash; use the list. Max dimensions: 4 cols &times; 4 rows. Beyond that, split into smaller tables.
 
@@ -1087,7 +1087,7 @@ TABLE GATE: before using a table, verify it has at least 3 columns AND at least 
 7. Desirable difficulties built into the format. Toggles create the desired difficulty. Preserve this by making questions that force real retrieval, not cued recognition. Include at least one "reusable reasoning pattern" toggle per lecture &mdash; an exam method the learner can transfer to unseen cases.
 
 ARCHETYPE-SPECIFIC STRUCTURE (must be preserved in the .md)
-- CASCADE: the pathway skeleton goes at the top of the section, in a code block or mermaid diagram, BEFORE any Q&rarr;A toggles. The toggles then drill into each step.
+- CASCADE: the pathway skeleton goes at the top of the section, in a fenced code block tagged <code>javascript</code> (or Mermaid only if branching and &le;5 nodes), BEFORE any Q&rarr;A toggles. The toggles then drill into each step.
 - ATLAS: territory map at the top of the lecture as a compact hierarchy. Then identical-template cards per item. Then a cross-cutting patterns section. Then an interleaved SBA block (10&ndash;15 Qs mixed across items) at the end, forcing discrimination.
 - MECHANISM: normal Q&rarr;A flow, ordered by causal logic, not slide order.
 - MIXED: combine the above &mdash; e.g. a cascade skeleton at the top of a mechanism section, an atlas card-set for the list-heavy part, and an interleaved SBA block at the end.
@@ -1175,7 +1175,9 @@ For every figure, walk this ladder top to bottom. Stop at the first rung that fi
 
 (2) TABLE &mdash; is the figure showing parallel comparisons across &ge;3 items along &ge;3 dimensions, or a clear feature-by-feature contrast? &rarr; Verdict: INLINE, reconstructable as a markdown table.
 
-(3) MERMAID / ASCII FLOW &mdash; is it a pathway, cascade, decision tree, or directed graph where labels and arrows are the substance and reconstruction won't lose meaning? &rarr; Verdict: INLINE, reconstructable as mermaid or ASCII in a code block.
+(3) ASCII FLOW in a `javascript` code block &mdash; DEFAULT for any pathway, cascade, sequence, or layered structure. Goes in a fenced code block with language tag <code>javascript</code> (Notion's JS highlighter colours parentheses, keywords, and comments, which makes ASCII chains visually pop). Width-flexible: long lines scroll horizontally inside the code block on mobile without breaking page layout. This is the right tool for almost every chain-like figure (anatomical layers, signalling cascades, metabolic pathways, sequential steps) &rarr; Verdict: INLINE.
+
+(3-alt) MERMAID DIAGRAM &mdash; ONLY when ALL three gates are met: (a) the content has genuine multi-way branching ASCII can't show clearly (e.g. an algorithm with multiple "if/then/else" splits), AND (b) total node count is &le;5, AND (c) labels are short (&le;2 words each). Renders as an SVG diagram in Notion. WARNING: on mobile, Mermaid diagrams scale down to fit the column width &mdash; there's no horizontal scroll, so anything bigger than ~5 small nodes becomes illegible on a phone. Most chains and pathways do NOT meet the gates and should go to rung (3) instead. If in doubt, default to ASCII &rarr; Verdict: INLINE.
 
 (4) COMPACT LIST / BULLETED LADDER &mdash; is it a hierarchy or branching algorithm where structure is captured by indentation? &rarr; Verdict: INLINE, reconstructable as a nested bullet list or short decision-tree code block.
 
@@ -1188,7 +1190,7 @@ ROUGH BUDGET CHECK
 A typical lecture should ship 5&ndash;10 PDF figures. If your inventory comes out with &gt;15 PDFs, RE-WALK the list and find which ones are actually reconstructable as INLINE &mdash; you've drifted toward defaulting to PDF. The exception is genuinely figure-heavy lectures (anatomy, histology, dermatology) where 20+ PDFs is legitimate; even then, every PDF needs its justification line.
 
 OTHER VERDICTS
-- INLINE &mdash; reconstructable as markdown (table, mermaid, ASCII, bullet ladder). Does NOT mean "no figure" &mdash; the figure still exists in the .md, just rendered as text rather than a JPEG.
+- INLINE &mdash; reconstructable as markdown (table, ASCII flow in <code>javascript</code> code block, Mermaid for small branching only, bullet ladder). Does NOT mean "no figure" &mdash; the figure still exists in the .md, just rendered as text rather than a JPEG.
 - SKIP &mdash; decorative, low-value, or absorbed by prose. The teaching point survives without anything appearing on the page.
 
 For every PDF-verdict figure, ALSO record the crop box as four fractional coordinates (left, top, right, bottom, each 0.0&ndash;1.0) based on where the figure sits on the rendered slide JPEG. These will be used in Prompt 3 to auto-crop and export. If the figure occupies the whole slide, use 0,0,1,1. Get these right by viewing the JPEG before writing them down.
@@ -1335,10 +1337,23 @@ Right after the "How to use" blockquote and before the "Lecturer's voice" sectio
 [TAG] is the module tag locked in at Prompt 1. [folder-slug] is the GitHub Pages folder where this lecture's figures live (e.g. `adrenal`, `pharm`, `cerebral-inflammation`). The embed step (Prompt 5) reads this header before doing anything; mismatch between the page's tag and the folder's expected tag aborts the embed.
 
 (b) Figure references inside the .md.
-For every figure marked TEXT in the inventory &rarr; reconstruct inline (mermaid code block, ASCII chain, comparison table).
+For every figure marked INLINE in the inventory &rarr; reconstruct inline. Default format is an ASCII flow inside a fenced code block tagged <code>javascript</code>, e.g.:
+    ```javascript
+    Lumen (blood)
+        |
+    Endothelial cell &mdash; TIGHT JUNCTION &mdash; Endothelial cell
+        |
+    Basal lamina
+        |
+    Astrocyte end-feet (glia limitans)
+        |
+    Brain parenchyma
+    ```
+The <code>javascript</code> tag is mandatory: Notion's JS highlighter colours parentheses and keywords (making the ASCII visually pop), and code blocks scroll horizontally on mobile so long chains don't break page layout. Use Mermaid (` ```mermaid `) ONLY for small branching diagrams &le;5 nodes with short labels &mdash; Mermaid renders as SVG that scales down on mobile and becomes illegible above that complexity. For comparison-style figures &rarr; markdown table. For hierarchies &rarr; nested bullets.
+
 For every figure marked PDF &rarr; insert exactly:
-    &#x1F4CE; Figure [TAG]-L[N].[M] &mdash; [caption]
-at the toggle where the figure is needed (e.g. "&#x1F4CE; Figure ADR-L1.3 &mdash; Steroid pathway"). Do not try to describe the visual inline; that's the embed's job.
+    &#x1F4CE; Figure [TAG]-[L-number].[M] &mdash; [caption]
+at the toggle where the figure is needed (e.g. "&#x1F4CE; Figure ENDO-L14.3 &mdash; Steroid pathway"). Do not try to describe the visual inline; that's the embed's job.
 
 (c) Extract the PDF-verdict figures as actual files.
 The rasterized slide JPEGs from Prompt 1 should be in /home/claude/. If they aren't, re-rasterize first (same libreoffice + pdftoppm commands).
@@ -1441,7 +1456,7 @@ Headings: ## &rarr; Notion Heading 2. ### Q: &hellip; &rarr; Notion toggle block
 
 Tables: Markdown tables &rarr; Notion tables with headers.
 
-Code blocks: Triple-backtick blocks &rarr; Notion code blocks. Preserve monospace alignment for ASCII diagrams (cascade trees, pathway boxes).
+Code blocks: Triple-backtick blocks &rarr; Notion code blocks. PRESERVE the language tag verbatim (e.g. ` ```javascript ` &rarr; Notion code block with language set to JavaScript; ` ```mermaid ` &rarr; Notion code block with language set to Mermaid). The language tag is intentional &mdash; ASCII pathway diagrams use <code>javascript</code> for the syntax highlighter's colour cues, and Notion's mobile rendering relies on the language being set correctly. Untagged blocks &rarr; plain code block (Notion's default). Preserve monospace alignment for ASCII diagrams (cascade trees, pathway boxes) regardless of language tag.
 
 Callouts &mdash; convert ONLY when the emoji is at the START of a block:
 - &#x26A0;&#xFE0F; &rarr; red callout
@@ -1655,7 +1670,8 @@ VERDICT DECISION LADDER (PDF is the LAST resort)
 For every figure, walk this ladder top to bottom. Stop at the first rung that fits:
 (1) PROSE &mdash; teaching point statable in 1&ndash;2 sentences with no visual &rarr; SKIP.
 (2) TABLE &mdash; parallel comparisons across &ge;3 items along &ge;3 dimensions &rarr; INLINE (markdown table).
-(3) MERMAID / ASCII &mdash; pathway, cascade, decision tree, directed graph &rarr; INLINE.
+(3) ASCII FLOW in `javascript` code block &mdash; DEFAULT for chains, cascades, layered structures, sequences. JS-highlighted code block scrolls horizontally on mobile so width-flexible. Most pathway-style figures land here &rarr; INLINE.
+(3-alt) MERMAID &mdash; only when content has genuine branching AND &le;5 nodes AND &le;2-word labels. Mobile-hostile beyond this (no scroll; SVG scales down to column width = illegible on phone). Default to (3) when in doubt &rarr; INLINE.
 (4) COMPACT LIST / DECISION TREE &mdash; hierarchy or branching algorithm &rarr; INLINE (nested bullets / code-block tree).
 (5) PDF (LAST RESORT) &mdash; only if (1)&ndash;(4) all fail. Legitimate reasons: real anatomy with spatial relationships; histology/scan/radiograph; clinical-sign photo; graph where the curve's shape is the teaching point; complex multi-element labelled diagram where reconstruction would lose more than it preserves.
 
@@ -1666,7 +1682,7 @@ BUDGET CHECK
 Typical lecture: 5&ndash;10 PDF figures. If &gt;15, re-walk the list and find which are actually reconstructable as INLINE. Anatomy/histology/dermatology lectures may legitimately need 20+; even then, every PDF has its justification line.
 
 Verdicts:
-- INLINE &mdash; figure exists in the .md, rendered as table/mermaid/ASCII/bullets (not a JPEG)
+- INLINE &mdash; figure exists in the .md as table, ASCII flow in `javascript` code block, Mermaid (small branching only), or bullets (not a JPEG)
 - PDF &mdash; companion-PDF JPEG, justified per above
 - SKIP &mdash; absorbed by prose or low-value
 
@@ -1839,10 +1855,10 @@ Right after the "How to use" blockquote and before the "Lecturer's voice" sectio
 [TAG] is the module tag locked in at Step 0a of Prompt 1. [folder-slug] is the GitHub Pages folder where this lecture's figures live. The embed step (Prompt 5) reads this header before doing anything; mismatch aborts the embed.
 
 (b) Figure references inside the .md.
-For every figure marked TEXT in the inventory &rarr; reconstruct inline (mermaid code block, ASCII chain, comparison table).
+For every figure marked INLINE &rarr; reconstruct inline. Default format is an ASCII flow inside a fenced code block tagged <code>javascript</code> (mandatory tag: gives Notion's JS highlighter colour cues AND horizontal-scroll on mobile for wide chains). Use Mermaid (<code>```mermaid</code>) ONLY for small branching diagrams &le;5 nodes with short labels. Comparison-style figures &rarr; markdown table. Hierarchies &rarr; nested bullets.
 For every figure marked PDF &rarr; insert exactly:
-    &#x1F4CE; Figure [TAG]-L[N].[M] &mdash; [caption]
-at the toggle where the figure is needed (e.g. "&#x1F4CE; Figure ADR-L1.3 &mdash; Steroid pathway").
+    &#x1F4CE; Figure [TAG]-[L-number].[M] &mdash; [caption]
+at the toggle where the figure is needed (e.g. "&#x1F4CE; Figure ENDO-L14.3 &mdash; Steroid pathway").
 
 (c) Extract the PDF-verdict figures as actual files.
 The rasterized slide JPEGs from Prompt 1 should be in /home/claude/. If they aren't, re-rasterize first (same libreoffice + pdftoppm commands).
@@ -1941,7 +1957,7 @@ Title: strip "(part 1 of 2)" / "(part 2 of 2)" / "Lecture:" / "Tutorial:" / "Lec
 
 Headings: ## &rarr; Heading 2. ### Q: &hellip; &rarr; toggle block (remove "Q:" prefix from title, nest all following content until next ### or ##).
 
-Tables: Markdown tables &rarr; Notion tables with headers. Code blocks &rarr; Notion code blocks, preserve monospace alignment.
+Tables: Markdown tables &rarr; Notion tables with headers. Code blocks &rarr; Notion code blocks; PRESERVE the language tag (` ```javascript ` &rarr; JS-language Notion block, ` ```mermaid ` &rarr; Mermaid-language Notion block). Preserve monospace alignment.
 
 Callouts &mdash; convert ONLY when the emoji is at the START of a block:
 &#x26A0;&#xFE0F; &rarr; red, &#x2B50; &rarr; yellow, &#x1F9E0; &rarr; blue, &#x1F4D8; &rarr; grey.
@@ -2061,7 +2077,8 @@ VERDICT DECISION LADDER (PDF is the LAST resort, not the default)
 Walk this ladder for every figure in every lecture, top to bottom; stop at the first rung that fits:
 (1) PROSE &mdash; statable in 1&ndash;2 sentences with no visual &rarr; SKIP.
 (2) TABLE &mdash; parallel comparisons across &ge;3 items along &ge;3 dimensions &rarr; INLINE (markdown table).
-(3) MERMAID / ASCII &mdash; pathway, cascade, decision tree, directed graph &rarr; INLINE.
+(3) ASCII FLOW in `javascript` code block &mdash; DEFAULT for chains, cascades, layered structures, sequences. JS-highlighted code block scrolls horizontally on mobile so width-flexible. Most pathway-style figures land here &rarr; INLINE.
+(3-alt) MERMAID &mdash; only when content has genuine branching AND &le;5 nodes AND &le;2-word labels. Mobile-hostile beyond this (no scroll; SVG scales down to column width = illegible on phone). Default to (3) when in doubt &rarr; INLINE.
 (4) COMPACT LIST / DECISION TREE &mdash; hierarchy or branching algorithm &rarr; INLINE (nested bullets / code-block tree).
 (5) PDF (LAST RESORT) &mdash; only if (1)&ndash;(4) all fail. Legitimate reasons: real anatomy with spatial relationships; histology/scan/radiograph; clinical-sign photo; graph where the curve's shape is the teaching point; complex multi-element labelled diagram where reconstruction would lose more than it preserves.
 
@@ -2070,7 +2087,7 @@ Every PDF needs a one-line justification stating which lower rungs were consider
 Per-lecture budget: 5&ndash;10 PDF figures typical. &gt;15 in a single lecture means re-walk the inventory. Anatomy/histology/dermatology lectures may legitimately need 20+; even then, every PDF earns its place via justification.
 
 Verdicts:
-- INLINE &mdash; figure exists in the .md as table/mermaid/ASCII/bullets (not a JPEG)
+- INLINE &mdash; figure exists in the .md as table, ASCII flow in `javascript` code block, Mermaid (small branching only), or bullets (not a JPEG)
 - PDF &mdash; companion-PDF JPEG, justified per above
 - SKIP &mdash; absorbed by prose or low-value
 
@@ -2186,10 +2203,10 @@ Right after the "How to use" blockquote and before the "Lecturer's voice" sectio
 Each lecture in the bundle has its own tag (locked at Prompt 1 Step 0a) and its own GitHub folder. If two lectures in the bundle share a folder (e.g. T1DM and T2DM both in `diabetes/`), each .md still has its own header line pointing at the same folder &mdash; the embed step uses the tag to disambiguate within the folder.
 
 (4) Figure references inside each .md.
-For every figure marked TEXT &rarr; reconstruct inline (mermaid, ASCII chain, comparison table).
+For every figure marked INLINE &rarr; reconstruct inline. Default: ASCII flow inside a fenced code block tagged <code>javascript</code> (mandatory tag for JS highlighting + mobile horizontal-scroll). Mermaid only for small branching diagrams &le;5 nodes with short labels. Comparisons &rarr; tables. Hierarchies &rarr; nested bullets.
 For every figure marked PDF &rarr; insert exactly:
-    &#x1F4CE; Figure [TAG]-L[N].[M] &mdash; [caption]
-using the lecture's own tag (e.g. "&#x1F4CE; Figure DM-T1.3 &mdash; Insulin signalling"). A figure that legitimately appears in more than one lecture: use the originating lecture's tag at every reference; do not mint a duplicate filename for the receiving lecture.
+    &#x1F4CE; Figure [TAG]-[L-number].[M] &mdash; [caption]
+using each lecture's own tag and L-number (e.g. "&#x1F4CE; Figure ENDO-L7.3 &mdash; Insulin signalling" if T1DM is ENDO-L7). A figure that legitimately appears in more than one lecture: use the originating lecture's tag at every reference; do not mint a duplicate filename for the receiving lecture.
 
 (5) Extract the PDF-verdict figures as actual files.
 For each PDF-verdict figure, use PIL to crop from the rasterized JPEG using the stored fractional box coordinates, resize to max 1400px width, save as JPEG quality 90 with optimize=True (same crop() function as single-lecture Prompt 3).
@@ -2278,7 +2295,7 @@ Title: strip "(part 1 of 2)" / "(part 2 of 2)" / "Lecture:" / "Tutorial:" / "Lec
 
 Headings: ## &rarr; Heading 2. ### Q: &hellip; &rarr; toggle block (remove "Q:" prefix from title, nest all following content until next ### or ##).
 
-Tables: Markdown tables &rarr; Notion tables with headers. Code blocks &rarr; Notion code blocks, preserve monospace alignment for ASCII diagrams.
+Tables: Markdown tables &rarr; Notion tables with headers. Code blocks &rarr; Notion code blocks; PRESERVE the language tag (` ```javascript ` &rarr; JS-language Notion block, ` ```mermaid ` &rarr; Mermaid-language Notion block). Preserve monospace alignment for ASCII diagrams.
 
 Callouts &mdash; convert ONLY when the emoji is at the START of a block:
 &#x26A0;&#xFE0F; &rarr; red, &#x2B50; &rarr; yellow, &#x1F9E0; &rarr; blue, &#x1F4D8; &rarr; grey.
@@ -2679,6 +2696,17 @@ At the end, a summary across all pages:
     <p><strong>Mode B &mdash; single page.</strong> Supply ONE specific page URL. Same matching logic, just one page; the listing is still fetched by URL automatically. Use when you want to embed exactly one freshly-rendered page without touching siblings.</p>
     <p>Per-page pre-flight reports the resolution table BEFORE any update lands, so missing JPEGs (a forgotten GitHub push, a typo) are caught up front. Idempotent: safe to re-run on a partially-embedded page.</p>
     <p>The companion PDF from Prompt 3 still exists as an offline reference and a fallback if a URL ever 404s. Legacy untagged refs (<code>&#x1F4CE; Figure L3.2</code>, no tag prefix) on older pages are handled by the page-to-folder mapping baked into Prompt 5 &mdash; nothing migrates automatically; legacy stays legacy.</p>
+    </div>
+  </details>
+
+  <details class="fieldnote">
+    <summary>ASCII flow in `js` code blocks vs Mermaid &mdash; why ASCII almost always wins on mobile</summary>
+    <div class="fieldnote-body">
+    <p>Two ways to render a diagram inline in Notion: an ASCII chain inside a fenced code block tagged <code>javascript</code>, OR a Mermaid SVG diagram block. They look superficially similar but behave very differently on a phone, and you view all of this on iOS, so the mobile case dominates.</p>
+    <p><strong>ASCII in a `javascript` code block.</strong> Notion's JS syntax highlighter colours parentheses, keywords, and comments &mdash; which makes the ASCII visually pop with no real "code" inside. The block has its OWN horizontal scroll: if a chain is wider than your phone screen, you swipe within the block and the rest of the page stays put. Long labels and annotations like <code>Endothelial cell &mdash; TIGHT JUNCTION &mdash; Endothelial cell</code> survive narrow viewports because of this scroll. Why <code>javascript</code> specifically? Because (a) it gives the most visually useful highlighting for our content, (b) it standardises one choice across the whole system so Claude doesn't drift between <code>js</code>, <code>python</code>, <code>yaml</code>, etc. between lectures, (c) tagged code blocks render reliably on Notion mobile.</p>
+    <p><strong>Mermaid as an SVG diagram block.</strong> Renders as an actual diagram with auto-arranged boxes and arrows. On desktop, looks great. On mobile, Notion <em>scales the whole SVG down</em> to fit the column width &mdash; there's no horizontal scroll within a Mermaid block, and labels don't reflow. A diagram with 8 nodes that looks fine on a laptop becomes tiny illegible boxes on a phone. Tap-to-fullscreen exists but adds a per-figure interaction every time you read the page.</p>
+    <p><strong>Decision:</strong> ASCII in <code>javascript</code> code block is the default. Mermaid is reserved for the narrow case where ALL THREE gates are met: (a) genuine multi-way branching that ASCII can't show clearly, (b) total node count &le;5, (c) labels &le;2 words each. Most pathways, cascades, layered structures, and sequences fail at least one gate and should go ASCII. If in doubt, default to ASCII.</p>
+    <p>Failure mode this is solving: previous renders have produced Mermaid blocks for content that wasn't real Mermaid syntax (just ASCII labelled as Mermaid by mistake), which then shows a "Syntax error in Mermaid diagram" message on the page. Or produced plain code blocks with no language tag, which Notion renders in a uniform colour with no visual interest. The fix: ASCII content always goes in a <code>javascript</code>-tagged block (never a <code>mermaid</code>-tagged one). Real Mermaid syntax goes in a <code>mermaid</code>-tagged block (and only when the gates above are met).</p>
     </div>
   </details>
 
