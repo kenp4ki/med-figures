@@ -1043,6 +1043,9 @@ If material is incomplete/inconsistent/unclear, say so.
 If a transcript is missing, do not assume one exists.
 Small amounts of [Extra context] are fine if clearly labelled and they help understanding.
 
+TUTORIALS &mdash; FOLD INTO PARENT LECTURE, NEVER SEPARATE
+A tutorial is never its own .md / Notion page. It folds into its parent lecture's .md as a final "Tutorial &mdash; [name]" or "Applied cases" section, after the main teaching but before any interleaved SBA block. If a tutorial reinforces multiple lectures in a bundle, fold it into the MOST-DOWNSTREAM lecture (the one taught last in the bundle's teaching order), not split across multiple. Tutorial figures continue the parent lecture's figure-number sequence ([TAG]-[L-number]_31_..., _32_..., etc.) &mdash; do NOT mint a separate T_ prefix. If a tutorial is uploaded WITHOUT its parent lecture present in the chat, STOP and ask which lecture it belongs to before doing anything else &mdash; do NOT produce a standalone tutorial .md as a fallback.
+
 TONE
 Clear, direct, intelligent. No fluff. No vague summaries. No oversimplification to the point of uselessness. The goal is I can handle direct recall and case-based questions confidently.</pre>
     <button class="expand-btn">Expand &darr;</button>
@@ -1163,16 +1166,37 @@ Flag any slide images where a figure is too small or unclear to read accurately 
 
 Step 2 &mdash; Figure inventory.
 Produce a table of every figure/diagram/image across the lecture:
-| Slide # | 1-line description | Verdict | Proposed caption (if PDF) | Crop box l,t,r,b (if PDF) | Which teaching point it belongs to |
+| Slide # | 1-line description | Verdict | Justification (if PDF) | Proposed caption (if PDF) | Crop box l,t,r,b (if PDF) | Teaching point |
 
-Verdict:
-- TEXT &mdash; reconstructable as a mermaid diagram, ASCII chain, or comparison table inline in the .md
-- PDF &mdash; genuinely visual (anatomy photo, real scan, complex diagram, graph); needs to go in a companion PDF
-- SKIP &mdash; decorative or low-value
+VERDICT DECISION LADDER (PDF is the LAST resort &mdash; not the default)
+For every figure, walk this ladder top to bottom. Stop at the first rung that fits:
+
+(1) PROSE &mdash; can the teaching point be stated in 1&ndash;2 sentences with no visual at all? (e.g. "BP = CO &times; SVR" doesn't need a figure, the equation IS the content.) &rarr; Verdict: SKIP, because the prose answer in the .md absorbs the teaching point.
+
+(2) TABLE &mdash; is the figure showing parallel comparisons across &ge;3 items along &ge;3 dimensions, or a clear feature-by-feature contrast? &rarr; Verdict: INLINE, reconstructable as a markdown table.
+
+(3) MERMAID / ASCII FLOW &mdash; is it a pathway, cascade, decision tree, or directed graph where labels and arrows are the substance and reconstruction won't lose meaning? &rarr; Verdict: INLINE, reconstructable as mermaid or ASCII in a code block.
+
+(4) COMPACT LIST / BULLETED LADDER &mdash; is it a hierarchy or branching algorithm where structure is captured by indentation? &rarr; Verdict: INLINE, reconstructable as a nested bullet list or short decision-tree code block.
+
+(5) PDF (LAST RESORT) &mdash; only if (1)&ndash;(4) all fail. Reasons that legitimately earn PDF: real anatomy with spatial relationships you can't text-describe (e.g. cerebellar nuclei in 3D); real histology / scan / radiograph (e.g. mitral stenosis echo, chest X-ray); photo of a clinical sign (rash distribution, posture, deformity, malar facies); a graph where the SHAPE of the curve is the teaching point and prose loses it (Wiggers, exercise-tolerance, dose-response with a specific inflection); a complex multi-element diagram (named vasculature branches, brain region labels) where reconstruction would lose so much fidelity prose gets longer than the original.
+
+JUSTIFICATION (REQUIRED FOR EVERY PDF)
+For every figure marked PDF, write a one-line justification stating which lower rungs were considered and why they failed. NOT vague ("image needed") &mdash; concrete: "Considered table (only 2 dimensions, fails 3-col gate); considered mermaid (no flow structure, just spatial); kept as PDF because layout of substantia nigra vs surrounding midbrain structures carries the teaching point and prose can't reconstruct it." If you cannot write a real justification, the figure is NOT PDF &mdash; demote it.
+
+ROUGH BUDGET CHECK
+A typical lecture should ship 5&ndash;10 PDF figures. If your inventory comes out with &gt;15 PDFs, RE-WALK the list and find which ones are actually reconstructable as INLINE &mdash; you've drifted toward defaulting to PDF. The exception is genuinely figure-heavy lectures (anatomy, histology, dermatology) where 20+ PDFs is legitimate; even then, every PDF needs its justification line.
+
+OTHER VERDICTS
+- INLINE &mdash; reconstructable as markdown (table, mermaid, ASCII, bullet ladder). Does NOT mean "no figure" &mdash; the figure still exists in the .md, just rendered as text rather than a JPEG.
+- SKIP &mdash; decorative, low-value, or absorbed by prose. The teaching point survives without anything appearing on the page.
 
 For every PDF-verdict figure, ALSO record the crop box as four fractional coordinates (left, top, right, bottom, each 0.0&ndash;1.0) based on where the figure sits on the rendered slide JPEG. These will be used in Prompt 3 to auto-crop and export. If the figure occupies the whole slide, use 0,0,1,1. Get these right by viewing the JPEG before writing them down.
 
-Captions follow the format: "Figure [TAG]-[L-number].[figure#] &mdash; [short description]" using the locked-in module tag and lecture position from Step 0 (e.g. "Figure ENDO-L14.3 &mdash; Steroid pathway"). The [TAG]-[L-number] pair is the same one you confirmed at Step 0; if the lecture position contains a dot (e.g. L5.5), use it verbatim in the caption (the figure number is appended as another dot, so an L5.5 lecture's third figure is "Figure ENDO-L5.5.3"). Do NOT extract or crop anything yet &mdash; that happens in Prompt 3.
+Captions follow the format: "Figure [TAG]-[L-number].[figure#] &mdash; [short description]" using the locked-in module tag and lecture position from Step 0 (e.g. "Figure ENDO-L14.3 &mdash; Steroid pathway"). If the lecture position contains a dot (e.g. L5.5), use it verbatim in the caption. Do NOT extract or crop anything yet &mdash; that happens in Prompt 3.
+
+TUTORIAL HANDLING
+If the upload set includes a tutorial alongside its parent lecture, audit the tutorial's slides and figures as part of the SAME inventory and audit &mdash; same module tag, same L-number, figure numbers continuing the lecture's sequence (so if the lecture proper has 28 figures, tutorial figures are F29 onward). Do NOT produce a separate audit or inventory for the tutorial. If only a tutorial was uploaded with no parent lecture present in this chat, STOP NOW and ask me which lecture it belongs to &mdash; do not proceed.
 
 Step 3 &mdash; Classify.
 Tell me which archetype this lecture is:
@@ -1380,7 +1404,7 @@ NEXT STEPS BLOCK (print this verbatim at the very end of your response, after al
     Next steps:
     1. Unzip [TAG]-[L-number]-figures.zip. Drag the inner folder ([tag-lower]/) into your med-figures GitHub repo. If a folder of that name already exists, GitHub merges; if not, it creates one. The auto-listing GitHub Action will refresh med-figures-listing.txt within ~10 seconds.
     2. Open Cowork; attach [Lecture-Name].md; paste Prompt 4. Note the Notion page URL Cowork emits. (For multiple .mds, batch no more than 3 per Cowork chat &mdash; see Prompt 4 for why.)
-    3. Open a Notion-MCP chat; paste Prompt 5; attach the latest med-figures-listing.txt; supply the parent Notion URL (or the specific page URL from step 2). Prompt 5 walks every subpage autonomously and embeds.
+    3. Open a Notion-MCP chat; paste Prompt 5 (it fetches https://kenp4ki.github.io/med-figures/med-figures-listing.txt automatically); supply the parent Notion URL (or specific page URL from step 2). Prompt 5 walks every subpage autonomously and embeds.
     ---
 
 Do not explain the design principles in the output. Just embody them.</pre>
@@ -1442,18 +1466,21 @@ Horizontal rule (---) &rarr; Notion divider.
   </div>
 
   <h3 id="prompt-5">Prompt 5 &mdash; Embed figures into Notion via GitHub Pages</h3>
-  <p class="section-subtitle">Run in a fresh Notion-MCP chat (or claude.ai with Notion connected) <em>after</em> Prompt 4 has created the Notion page. Attach <code>med-figures-listing.txt</code> (the auto-generated index of your <code>med-figures</code> repo) and supply the Notion page URL. Embeds GitHub-Pages-hosted JPEGs as markdown image blocks below each <code>&#x1F4CE; Figure</code> reference. Replaces the older Cowork-based local-folder embed.</p>
+  <p class="section-subtitle">Run in a fresh Notion-MCP chat (or claude.ai with Notion connected) <em>after</em> Prompt 4 has created the Notion page. Claude fetches the listing automatically from <code>https://kenp4ki.github.io/med-figures/med-figures-listing.txt</code> via <code>web_fetch</code> as its first action &mdash; no attachment needed. Supply the Notion page URL (or parent URL for autonomous module-wide embedding). Embeds GitHub-Pages-hosted JPEGs as markdown image blocks below each <code>&#x1F4CE; Figure</code> reference.</p>
   <div class="prompt-block collapsed">
     <button class="copy-btn" data-target="p5-text">Copy</button>
     <pre id="p5-text">Embed every figure on the supplied Notion page(s) using GitHub-Pages-hosted JPEGs. Two modes &mdash; one of:
 
 INPUTS (Mode A &mdash; parent walk, RECOMMENDED for whole modules)
 - Parent Notion URL: [PASTE]  (Claude walks every subpage under this parent autonomously)
-- Attached: med-figures-listing.txt (authoritative listing of every folder + filename in https://kenp4ki.github.io/med-figures/)
+- Listing URL: https://kenp4ki.github.io/med-figures/med-figures-listing.txt
+  (auto-regenerated on every push; FETCH WITH web_fetch as your first action &mdash; do not ask me to attach it)
 
 INPUTS (Mode B &mdash; explicit page URL, for single targeted page)
 - Notion page URL: [PASTE]
-- Attached: med-figures-listing.txt
+- Listing URL: same as Mode A
+
+The listing is canonical and lives at the URL above. ALWAYS fetch it first via web_fetch before anything else. Only fall back to "ask the user to attach the listing as a file" if the fetch fails (404, network error, empty response) &mdash; never ask for an attachment as the default.
 
 Use Mode A when you want every page under a parent embedded in one shot &mdash; this is the autonomous workflow. Use Mode B when you want to embed exactly one page (e.g. you've just rendered a single new lecture and don't want to touch siblings).
 
@@ -1622,16 +1649,33 @@ Flag any slide images where a figure is too small or unclear to read accurately 
 
 Step 2 &mdash; Figure inventory.
 Produce a table of every figure/diagram/image across the lecture:
-| Slide # | 1-line description | Verdict | Proposed caption (if PDF) | Crop box l,t,r,b (if PDF) | Which teaching point it belongs to |
+| Slide # | 1-line description | Verdict | Justification (if PDF) | Proposed caption (if PDF) | Crop box l,t,r,b (if PDF) | Teaching point |
 
-Verdict:
-- TEXT &mdash; reconstructable as a mermaid diagram, ASCII chain, or comparison table inline in the .md
-- PDF &mdash; genuinely visual (anatomy photo, real scan, complex diagram, graph); needs to go in a companion PDF
-- SKIP &mdash; decorative or low-value
+VERDICT DECISION LADDER (PDF is the LAST resort)
+For every figure, walk this ladder top to bottom. Stop at the first rung that fits:
+(1) PROSE &mdash; teaching point statable in 1&ndash;2 sentences with no visual &rarr; SKIP.
+(2) TABLE &mdash; parallel comparisons across &ge;3 items along &ge;3 dimensions &rarr; INLINE (markdown table).
+(3) MERMAID / ASCII &mdash; pathway, cascade, decision tree, directed graph &rarr; INLINE.
+(4) COMPACT LIST / DECISION TREE &mdash; hierarchy or branching algorithm &rarr; INLINE (nested bullets / code-block tree).
+(5) PDF (LAST RESORT) &mdash; only if (1)&ndash;(4) all fail. Legitimate reasons: real anatomy with spatial relationships; histology/scan/radiograph; clinical-sign photo; graph where the curve's shape is the teaching point; complex multi-element labelled diagram where reconstruction would lose more than it preserves.
+
+JUSTIFICATION REQUIRED FOR EVERY PDF
+One concrete line per PDF stating which lower rungs were considered and why they failed. If you can't write a real justification, the figure isn't PDF &mdash; demote it.
+
+BUDGET CHECK
+Typical lecture: 5&ndash;10 PDF figures. If &gt;15, re-walk the list and find which are actually reconstructable as INLINE. Anatomy/histology/dermatology lectures may legitimately need 20+; even then, every PDF has its justification line.
+
+Verdicts:
+- INLINE &mdash; figure exists in the .md, rendered as table/mermaid/ASCII/bullets (not a JPEG)
+- PDF &mdash; companion-PDF JPEG, justified per above
+- SKIP &mdash; absorbed by prose or low-value
 
 For every PDF-verdict figure, ALSO record the crop box as four fractional coordinates (left, top, right, bottom, each 0.0&ndash;1.0) based on where the figure sits on the rendered slide JPEG. If the figure occupies the whole slide, use 0,0,1,1. Get these right by viewing the JPEG before writing them down.
 
 Captions: "Figure [TAG]-[L-number].[figure#] &mdash; [short description]" using the locked-in tag and lecture position (e.g. "Figure ENDO-L14.3 &mdash; Steroid pathway"). Do NOT extract or crop anything yet.
+
+TUTORIAL HANDLING
+If a tutorial was uploaded earlier alongside its parent lecture, audit and inventory it as part of the same pass &mdash; same tag, same L-number, figure numbers continuing the lecture's sequence. NOT a separate inventory. If only a tutorial is present without its parent lecture, STOP and ask before proceeding &mdash; do not produce a standalone tutorial .md.
 
 Step 3 &mdash; Classify.
 Tell me which archetype this lecture is (MECHANISM / CASCADE / ATLAS / MIXED) with a one-paragraph justification.
@@ -1862,7 +1906,7 @@ NEXT STEPS BLOCK (print verbatim at the very end of your response, after all art
     Next steps:
     1. Unzip [TAG]-[L-number]-figures.zip. Drag the inner folder ([tag-lower]/) into your med-figures GitHub repo. Auto-listing will refresh in ~10 seconds.
     2. Open Cowork; attach [Lecture-Name].md; paste Prompt 4. Note the Notion page URL. (No more than 3 .mds per Cowork chat.)
-    3. Open a Notion-MCP chat; paste Prompt 5; attach the latest med-figures-listing.txt; supply the parent Notion URL or the specific page URL.
+    3. Open a Notion-MCP chat; paste Prompt 5 (it fetches https://kenp4ki.github.io/med-figures/med-figures-listing.txt automatically); supply the parent Notion URL or specific page URL.
     ---
 
 Do not explain the design principles in the output. Just embody them.</pre>
@@ -2011,8 +2055,29 @@ Example: "Vascular Endothelium toggle 'Three stages of haemostasis' &rarr; &#x1F
 
 Step 3 &mdash; Per-lecture figure inventory.
 One inventory table per lecture, headed by tag. Standard columns:
-| Slide # | Description | Verdict | Caption (if PDF) | Crop box l,t,r,b (if PDF) | Teaching point |
+| Slide # | Description | Verdict | Justification (if PDF) | Caption (if PDF) | Crop box l,t,r,b (if PDF) | Teaching point |
+
+VERDICT DECISION LADDER (PDF is the LAST resort, not the default)
+Walk this ladder for every figure in every lecture, top to bottom; stop at the first rung that fits:
+(1) PROSE &mdash; statable in 1&ndash;2 sentences with no visual &rarr; SKIP.
+(2) TABLE &mdash; parallel comparisons across &ge;3 items along &ge;3 dimensions &rarr; INLINE (markdown table).
+(3) MERMAID / ASCII &mdash; pathway, cascade, decision tree, directed graph &rarr; INLINE.
+(4) COMPACT LIST / DECISION TREE &mdash; hierarchy or branching algorithm &rarr; INLINE (nested bullets / code-block tree).
+(5) PDF (LAST RESORT) &mdash; only if (1)&ndash;(4) all fail. Legitimate reasons: real anatomy with spatial relationships; histology/scan/radiograph; clinical-sign photo; graph where the curve's shape is the teaching point; complex multi-element labelled diagram where reconstruction would lose more than it preserves.
+
+Every PDF needs a one-line justification stating which lower rungs were considered and why they failed. If you can't write one, demote it.
+
+Per-lecture budget: 5&ndash;10 PDF figures typical. &gt;15 in a single lecture means re-walk the inventory. Anatomy/histology/dermatology lectures may legitimately need 20+; even then, every PDF earns its place via justification.
+
+Verdicts:
+- INLINE &mdash; figure exists in the .md as table/mermaid/ASCII/bullets (not a JPEG)
+- PDF &mdash; companion-PDF JPEG, justified per above
+- SKIP &mdash; absorbed by prose or low-value
+
 Caption format: "Figure [TAG]-[L-number].[figure#] &mdash; [description]" using each lecture's own tag and position (e.g. "Figure ENDO-L7.3 &mdash; Insulin signalling" if T1DM is ENDO-L7). Coords from JPEGs, not memory. A figure that appears in more than one lecture gets listed under first appearance and cross-noted in others &mdash; do not duplicate the JPEG, just reference it.
+
+TUTORIAL HANDLING IN BUNDLES
+If the bundle includes a tutorial alongside the lectures, the tutorial does NOT get its own inventory row in the lecture list. It folds into the MOST-DOWNSTREAM lecture in the bundle's teaching order (the last lecture, after dependencies are resolved in Step 4(c)). Tutorial figures continue THAT lecture's figure-number sequence (so if the downstream lecture has 28 figures, tutorial figures are F29 onward) using THAT lecture's tag and L-number. Audit the tutorial's content as a sub-section of the downstream lecture's audit, not as its own thing. If only a tutorial is present in the upload set without any parent lectures, STOP and ask which lectures it belongs to before proceeding.
 
 Step 4 &mdash; Per-lecture classification + bundle classification.
 
@@ -2177,7 +2242,7 @@ NEXT STEPS BLOCK (print this verbatim at the very end of your response, after al
     Next steps:
     1. For each lecture: unzip [TAG]-[L-number]-figures.zip and drag the inner folder ([tag-lower]/) into your med-figures GitHub repo. Lectures from the same module share the same inner-folder name and merge cleanly &mdash; tag+L-number prefixes keep filenames distinct. Auto-listing refreshes within ~10 seconds per push.
     2. Open Cowork; attach the bundle's .mds (NO MORE THAN 3 PER COWORK CHAT &mdash; for 4+ lectures, split across multiple Cowork chats); paste Prompt 4 (bundle). Note the Notion page URLs Cowork emits.
-    3. Open a Notion-MCP chat; paste Prompt 5 (bundle); attach the latest med-figures-listing.txt; supply either the parent Notion URL (autonomous walk) or the specific page URLs from step 2.
+    3. Open a Notion-MCP chat; paste Prompt 5 (it fetches https://kenp4ki.github.io/med-figures/med-figures-listing.txt automatically); supply the parent Notion URL (autonomous walk) or specific page URLs.
     ---
 
 Do not explain the design principles in the output. Just embody them.</pre>
@@ -2526,7 +2591,8 @@ If the same page shows recurrent corruption after one repair pass, the underlyin
 INPUTS
 - Notion page URLs (one per page, in order):
   [PASTE LIST]
-- Attached: med-figures-listing.txt
+- Listing URL: https://kenp4ki.github.io/med-figures/med-figures-listing.txt
+  (FETCH via web_fetch as your first action; only fall back to "ask user to attach" if the fetch fails)
 
 CORE TASK
 For every page supplied, walk every "&#x1F4CE; Figure ..." reference, resolve filename via the listing, and append "![caption](URL)" directly below it. Same matching logic as the standard single-page Prompt 5 (tagged convention current; legacy untagged refs handled via the page-to-folder mapping in single-lecture Prompt 5).
@@ -2565,7 +2631,7 @@ At the end, a summary across all pages:
     <summary>How figures actually flow through the system</summary>
     <div class="fieldnote-body">
     <p>Claude produces every figure for you &mdash; no manual screenshotting. The pipeline runs across two prompts and one external CDN:</p>
-    <p><strong>Prompt 1</strong> &rarr; Claude rasterizes every slide to a JPEG at 200 DPI using <code>libreoffice</code> + <code>pdftoppm</code>, views each image, and produces the figure inventory with fractional crop-box coordinates for every PDF-verdict figure. The lecture is also assigned a <em>module tag</em> here (e.g. <code>ADR</code>, <code>DM</code>) which threads through every artefact downstream.<br><strong>Prompt 3</strong> &rarr; Claude crops each figure with PIL (quality 90, max 1400px), names it <code>[TAG]-L[N]_[FF]_[slug].jpg</code>, writes a per-lecture manifest, and compiles the lecture's companion PDF. You then push the JPEGs and manifest to the <code>med-figures</code> GitHub Pages repo.<br><strong>Prompt 5</strong> &rarr; runs in a separate Notion-MCP chat after Cowork has rendered the page (Prompt 4). Reads the <code>.md</code>'s self-identifying header to know which folder to match against, validates every figure reference against the attached <code>med-figures-listing.txt</code>, and appends <code>![alt](URL)</code> markdown image embeds below each <code>&#x1F4CE; Figure</code> line. Pre-flight verification means broken refs are caught before any update lands, not after.</p>
+    <p><strong>Prompt 1</strong> &rarr; Claude rasterizes every slide to a JPEG at 200 DPI using <code>libreoffice</code> + <code>pdftoppm</code>, views each image, and produces the figure inventory with fractional crop-box coordinates for every PDF-verdict figure. Verdict uses a 5-rung decision ladder (prose &rarr; table &rarr; mermaid/ASCII &rarr; compact list &rarr; PDF as last resort) so reconstructable figures don't get unnecessarily shipped as JPEGs. The lecture is assigned one of the fixed 13 module tags here (<code>ENDO</code>, <code>NEURO</code>, <code>CARDIORESP</code>, etc.) plus a user-supplied L-number; both thread through every artefact downstream.<br><strong>Prompt 3</strong> &rarr; Claude crops each PDF-verdict figure with PIL (quality 90, max 1400px), names it <code>[TAG]-[L-number]_[FF]_[slug].jpg</code>, writes a per-lecture manifest, and compiles the lecture's companion PDF. You then unzip and drag the inner folder into the <code>med-figures</code> GitHub Pages repo.<br><strong>Prompt 5</strong> &rarr; runs in a separate Notion-MCP chat after Cowork has rendered the page (Prompt 4). Reads the <code>.md</code>'s self-identifying header to know which folder to match against, fetches <code>med-figures-listing.txt</code> directly from <code>kenp4ki.github.io/med-figures/</code> via <code>web_fetch</code> (no attachment), validates every figure reference, and appends <code>![alt](URL)</code> markdown image embeds below each <code>&#x1F4CE; Figure</code> line. Pre-flight verification means broken refs are caught before any update lands, not after.</p>
     <p>Your job is just to sanity-check the figure inventory in Prompt 1 (SKIP vs PDF verdicts) and to push the JPEGs to GitHub between Prompt 3 and Prompt 5.</p>
     </div>
   </details>
@@ -2609,10 +2675,35 @@ At the end, a summary across all pages:
     <summary>Prompt 5: figures in the Notion page itself</summary>
     <div class="fieldnote-body">
     <p>Prompt 5 lives in a separate Notion-MCP chat after Cowork has rendered the page(s). Two modes:</p>
-    <p><strong>Mode A &mdash; parent walk (recommended).</strong> Supply ONE Notion parent URL plus the listing. Claude walks every subpage under the parent autonomously, validates each against <code>med-figures-listing.txt</code>, and embeds. You don't tell Claude the folder, you don't tell Claude per-page URLs &mdash; the self-identifying header at the top of each <code>.md</code> (<em>Module tag: ENDO &middot; Lecture position: L14 &middot; GitHub folder: endo</em>) tells Claude which folder to match against. Page titles plus headers do all the routing. This is the autonomous workflow you sit back for.</p>
-    <p><strong>Mode B &mdash; single page.</strong> Supply ONE specific page URL plus the listing. Same matching logic, just one page. Use when you want to embed exactly one freshly-rendered page without touching siblings.</p>
+    <p><strong>Mode A &mdash; parent walk (recommended).</strong> Supply ONE Notion parent URL. Claude fetches <code>med-figures-listing.txt</code> from GitHub Pages on its own (no attachment needed), then walks every subpage under the parent autonomously, validates each against the listing, and embeds. You don't tell Claude the folder, you don't tell Claude per-page URLs &mdash; the self-identifying header at the top of each <code>.md</code> (<em>Module tag: ENDO &middot; Lecture position: L14 &middot; GitHub folder: endo</em>) tells Claude which folder to match against. Page titles plus headers do all the routing. This is the autonomous workflow you sit back for.</p>
+    <p><strong>Mode B &mdash; single page.</strong> Supply ONE specific page URL. Same matching logic, just one page; the listing is still fetched by URL automatically. Use when you want to embed exactly one freshly-rendered page without touching siblings.</p>
     <p>Per-page pre-flight reports the resolution table BEFORE any update lands, so missing JPEGs (a forgotten GitHub push, a typo) are caught up front. Idempotent: safe to re-run on a partially-embedded page.</p>
     <p>The companion PDF from Prompt 3 still exists as an offline reference and a fallback if a URL ever 404s. Legacy untagged refs (<code>&#x1F4CE; Figure L3.2</code>, no tag prefix) on older pages are handled by the page-to-folder mapping baked into Prompt 5 &mdash; nothing migrates automatically; legacy stays legacy.</p>
+    </div>
+  </details>
+
+  <details class="fieldnote">
+    <summary>Figures: PDF is the last resort, not the default</summary>
+    <div class="fieldnote-body">
+    <p>Earlier versions of Prompt 1 had a verdict step (TEXT / PDF / SKIP) that drifted toward defaulting to PDF for almost every figure on the slides. Real lectures were ending up with 50+ JPEGs cropped, named, and pushed to GitHub when 5&ndash;10 was the right number; the rest could have been mermaid pathways, comparison tables, or just prose. The verdict became vibes &mdash; "this looks like an image, ship it as PDF."</p>
+    <p>Two fixes make Claude think harder. First, a <strong>5-rung decision ladder</strong> Claude walks for every figure: prose &rarr; table &rarr; mermaid/ASCII &rarr; compact list &rarr; PDF (last resort). PDF is reachable only after lower rungs fail. Second, every PDF requires a <strong>one-line justification</strong> stating which lower rungs were considered and why they failed &mdash; concrete reasoning ("considered table: only 2 dimensions; considered mermaid: no flow structure; PDF because spatial layout of substantia nigra carries the teaching point"), not vague hand-waving.</p>
+    <p>If Claude can't write a real justification for a figure, it isn't PDF. Demote it. The forcing function is what makes the ladder bind &mdash; without it, Claude just pattern-matches "image-y" to PDF and the budget blows out.</p>
+    <p>Rough budget: 5&ndash;10 PDFs per typical lecture; &gt;15 means re-walk the inventory. Anatomy / histology / dermatology lectures may legitimately need 20+ &mdash; but every PDF still earns its place via the justification line.</p>
+    <p>The verdict is also renamed from <code>TEXT</code> to <code>INLINE</code>, because <code>TEXT</code> sounded like "no figure at all" and made PDF tempting whenever the slide obviously had a figure on it. <code>INLINE</code> makes clear that yes, the figure exists in the <code>.md</code> &mdash; just rendered as a table / mermaid / bullet ladder rather than as a JPEG.</p>
+    </div>
+  </details>
+
+  <details class="fieldnote">
+    <summary>Tutorials fold into parent lectures, never separate</summary>
+    <div class="fieldnote-body">
+    <p>A tutorial is never its own <code>.md</code> / Notion page. It folds into its parent lecture's <code>.md</code> as a final "Tutorial &mdash; [name]" or "Applied cases" section, sitting after the main teaching but before any interleaved SBA block. Same atomic-page principle as the no-bundle-overview rule: when you land on a lecture six weeks later, you want everything for that lecture (including the tutorial cases that reinforce it) in one place &mdash; not split across two pages you have to remember to flip between.</p>
+    <p>Three sub-rules cover the cases:</p>
+    <ul>
+    <li><strong>Tutorial maps to one specific lecture</strong> &rarr; folds into that lecture, full stop.</li>
+    <li><strong>Tutorial covers multiple lectures in a bundle</strong> &rarr; folds into the MOST-DOWNSTREAM lecture (the last one in the bundle's teaching order, after dependencies are resolved). The downstream lecture's page becomes the applied-cases landing pad for the bundle.</li>
+    <li><strong>Tutorial uploaded standalone (no parent in the chat)</strong> &rarr; Claude STOPS and asks which lecture it belongs to. Producing a standalone tutorial <code>.md</code> as a fallback is exactly the failure mode this rule exists to prevent.</li>
+    </ul>
+    <p>Tutorial figures continue the parent lecture's figure-number sequence (so a lecture with 28 figures gains tutorial figures F29 onward, all using the same <code>[TAG]-[L-number]</code> prefix). They do NOT get a separate <code>T_</code> sub-prefix &mdash; this keeps the filename pattern simple and avoids creating a special case in the embed prompt's matching logic. Legacy <code>T_*</code> prefixed JPEGs in the existing repo (e.g. <code>upgraded-skin-infections-infestations/T_*</code>) stay as legacy; the embed prompt's special-pattern fallback handles them.</p>
     </div>
   </details>
 
